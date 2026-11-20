@@ -12,7 +12,8 @@
     "mock": "node server.js --mock",
     "build:ext": "node scripts/build-extension.mjs",
     "fake-aprimo": "node dev/fake-aprimo.js",
-    "build:tools": "node scripts/build-tools.mjs"
+    "build:tools": "node scripts/build-tools.mjs",
+    "release": "sh scripts/release.sh"
   },
   "devDependencies": {
     "@anthropic-ai/sdk": "^1.9.0",

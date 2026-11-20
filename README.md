@@ -235,6 +235,12 @@ every update. `.gitignore` already excludes it, along with `.env` and `backups/`
 - Saves follow the API's documented pattern. `PUT /rule/{id}` sends the rule's fields, plus `conditions` and
   `actions` as `{ addOrUpdate: [...], remove: [indexes] }`, where `index` is each item's position.
 
+## Releases
+
+Each change bumps `version` in `extension/manifest.json` (also shown in every tool's header), is committed and pushed,
+then published with `npm run release -- "what changed"`. That creates a GitHub release `v<version>` with a zip of
+`extension/` to load unpacked. Keep `keys/` out of every commit and zip (it's in `.gitignore`).
+
 ## Not yet verified
 
 - Neither form has been run against a real Aprimo tenant. The fake tenant follows the published OpenAPI spec,
