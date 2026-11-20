@@ -1,0 +1,92 @@
+@import "tailwindcss" source(none);
+@source "./";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* Palette from Aprimo Admin Tools, where this tool comes from. Prefixed --bv- so it never collides with the
+   extension's own variables (styles.css also defines --muted, --accent, … with other meanings). */
+:root {
+  --bv-background: #ffffff;
+  --bv-foreground: #0f172a;
+  --bv-card: #f8fafc;
+  --bv-card-foreground: #0f172a;
+  --bv-popover: #ffffff;
+  --bv-popover-foreground: #0f172a;
+  --bv-primary: #2563eb;
+  --bv-primary-foreground: #ffffff;
+  --bv-secondary: #eff6ff;
+  --bv-secondary-foreground: #1e3a8a;
+  --bv-muted: #f1f5f9;
+  --bv-muted-foreground: #64748b;
+  --bv-accent: #eff6ff;
+  --bv-accent-foreground: #1d4ed8;
+  --bv-destructive: #dc2626;
+  --bv-destructive-foreground: #ffffff;
+  --bv-success: #16a34a;
+  --bv-border: #e2e8f0;
+  --bv-input: #e2e8f0;
+  --bv-ring: #93c5fd;
+  --bv-radius: 0.625rem;
+}
+
+.dark {
+  --bv-background: #0b1120;
+  --bv-foreground: #e2e8f0;
+  --bv-card: #0f172a;
+  --bv-card-foreground: #e2e8f0;
+  --bv-popover: #0f172a;
+  --bv-popover-foreground: #e2e8f0;
+  --bv-primary: #3b82f6;
+  --bv-primary-foreground: #ffffff;
+  --bv-secondary: #0f1e3d;
+  --bv-secondary-foreground: #bfdbfe;
+  --bv-muted: #111a2e;
+  --bv-muted-foreground: #94a3b8;
+  --bv-accent: #0f1e3d;
+  --bv-accent-foreground: #93c5fd;
+  --bv-destructive: #f87171;
+  --bv-destructive-foreground: #ffffff;
+  --bv-success: #4ade80;
+  --bv-border: #1e293b;
+  --bv-input: #1e293b;
+  --bv-ring: #1d4ed8;
+}
+
+@theme inline {
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  --color-background: var(--bv-background);
+  --color-foreground: var(--bv-foreground);
+  --color-card: var(--bv-card);
+  --color-card-foreground: var(--bv-card-foreground);
+  --color-popover: var(--bv-popover);
+  --color-popover-foreground: var(--bv-popover-foreground);
+  --color-primary: var(--bv-primary);
+  --color-primary-foreground: var(--bv-primary-foreground);
+  --color-secondary: var(--bv-secondary);
+  --color-secondary-foreground: var(--bv-secondary-foreground);
+  --color-muted: var(--bv-muted);
+  --color-muted-foreground: var(--bv-muted-foreground);
+  --color-accent: var(--bv-accent);
+  --color-accent-foreground: var(--bv-accent-foreground);
+  --color-destructive: var(--bv-destructive);
+  --color-destructive-foreground: var(--bv-destructive-foreground);
+  --color-success: var(--bv-success);
+  --color-border: var(--bv-border);
+  --color-input: var(--bv-input);
+  --color-ring: var(--bv-ring);
+  --radius-sm: calc(var(--bv-radius) - 4px);
+  --radius-md: calc(var(--bv-radius) - 2px);
+  --radius-lg: var(--bv-radius);
+  --radius-xl: calc(var(--bv-radius) + 4px);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground font-sans text-sm;
+  }
+}

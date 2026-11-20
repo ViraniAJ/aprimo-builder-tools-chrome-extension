@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rules Manager · Aprimo Builder Tools</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <strong>Rules Manager</strong>
+      <span id="envBadge" class="badge">…</span>
+    </div>
+    <div class="search">
+      <input id="search" type="search" placeholder="Search names, conditions, actions, references, field names…  ( / )" autocomplete="off">
+    </div>
+    <div class="top-actions">
+      <button id="refreshBtn" class="btn ghost" title="Reload rules from Aprimo">Refresh</button>
+      <button id="exportBtn" class="btn ghost" title="Download the visible rules as JSON">Export</button>
+      <button id="newBtn" class="btn primary">New rule</button>
+    </div>
+  </header>
+
+  <section class="filters">
+    <label>Target <select id="fTarget"><option value="">All</option></select></label>
+    <label>Trigger <select id="fTrigger"><option value="">All</option><option>WhenSavedOrDeleted</option><option>Daily</option></select></label>
+    <label>Status <select id="fEnabled"><option value="">All</option><option value="on">Enabled</option><option value="off">Disabled</option></select></label>
+    <label>Uses action <select id="fAction"><option value="">Any</option></select></label>
+    <label>Uses condition <select id="fCondition"><option value="">Any</option></select></label>
+    <label>Modified by <select id="fModifiedBy"><option value="">Anyone</option></select></label>
+    <label>Modified within <select id="fModifiedWithin">
+      <option value="">Any time</option>
+      <option value="today">Today</option>
+      <option value="7">Last 7 days</option>
+      <option value="30">Last 30 days</option>
+      <option value="90">Last 90 days</option>
+    </select></label>
+    <label>Sort <select id="fSort">
+      <option value="name">Name</option>
+      <option value="-modifiedOn">Recently modified</option>
+      <option value="target">Target</option>
+    </select></label>
+    <div class="spacer"></div>
+    <div class="seg" role="group" aria-label="Logic display">
+      <button data-mode="compact" class="active">Compact</button>
+      <button data-mode="full">Full logic</button>
+    </div>
+    <span id="count" class="muted"></span>
+  </section>
+
+  <main>
+    <div id="status" class="status"></div>
+    <table class="rules" id="rulesTable">
+      <thead>
+        <tr><th class="c-on">On</th><th class="c-name">Rule</th><th>If (all conditions)</th><th>Then</th></tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </main>
+
+  <div id="popover" class="popover" hidden></div>
+
+  <aside id="drawer" class="drawer" hidden aria-label="Rule editor">
+    <div class="drawer-head">
+      <h2 id="drawerTitle">Edit rule</h2>
+      <button class="btn ghost" id="closeDrawer" title="Close (Esc)">✕</button>
+    </div>
+    <div class="drawer-body">
+      <div class="grid2">
+        <label class="wide">Name <input id="eName" type="text"></label>
+        <label>Target <select id="eTarget"></select></label>
+        <label>Trigger <select id="eTrigger"><option>WhenSavedOrDeleted</option><option>Daily</option></select></label>
+        <label class="check"><input id="eEnabled" type="checkbox"> Enabled</label>
+        <label class="check"><input id="eDrafts" type="checkbox"> Include draft records</label>
+      </div>
+      <p id="eMeta" class="muted small"></p>
+      <div class="helper">
+        <input id="fieldPick" list="fieldList" placeholder="Insert field ID at cursor: type a field name…" autocomplete="off">
+        <datalist id="fieldList"></datalist>
+      </div>
+
+      <div class="editor-block">
+        <div class="block-head">
+          <h3>Conditions <span class="muted small">(all must be true)</span></h3>
+          <select id="addCondition"><option value="">+ Add condition…</option></select>
+        </div>
+        <textarea id="eConditions" spellcheck="false" rows="8"></textarea>
+        <div id="eConditionsErr" class="err"></div>
+      </div>
+
+      <div class="editor-block">
+        <div class="block-head">
+          <h3>Actions</h3>
+          <select id="addAction"><option value="">+ Add action…</option></select>
+        </div>
+        <textarea id="eActions" spellcheck="false" rows="8"></textarea>
+        <div id="eActionsErr" class="err"></div>
+      </div>
+
+      <details class="editor-block">
+        <summary>Tag (XML, optional)</summary>
+        <textarea id="eTag" spellcheck="false" rows="3"></textarea>
+      </details>
+
+      <div class="editor-block">
+        <h3>Preview</h3>
+        <div id="preview" class="logic full"></div>
+      </div>
+
+      <div id="diffWrap" class="editor-block" hidden>
+        <h3>Changes to send</h3>
+        <pre id="diff" class="diff"></pre>
+      </div>
+    </div>
+    <div class="drawer-foot">
+      <button class="btn danger ghost" id="deleteBtn">Delete</button>
+      <button class="btn ghost" id="duplicateBtn">Duplicate as new</button>
+      <div class="spacer"></div>
+      <button class="btn ghost" id="reviewBtn">Review changes</button>
+      <button class="btn primary" id="saveBtn">Save</button>
+    </div>
+  </aside>
+  <div id="scrim" class="scrim" hidden></div>
+  <div id="toast" class="toast" hidden></div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

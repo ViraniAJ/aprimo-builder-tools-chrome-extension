@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Job Log Search</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="jobs.css">
+</head>
+<body class="jobs-page">
+  <header class="topbar">
+    <div class="brand">
+      <strong>Job Log Search</strong>
+      <span id="envBadge" class="badge">…</span>
+    </div>
+    <div class="search">
+      <input id="jobId" type="search" placeholder="Find by job ID or record ID (paste the GUID)…" autocomplete="off" spellcheck="false">
+    </div>
+    <div class="top-actions">
+      <button id="refreshBtn" class="btn ghost" title="Run the search again">Refresh</button>
+      <button id="exportBtn" class="btn ghost" title="Download the matching jobs as CSV (up to 5,000)">Export CSV</button>
+    </div>
+  </header>
+
+  <p class="tool-intro">Search and filter DAM maintenance jobs (the System → Jobs log) through the Aprimo REST API. Read-only.</p>
+
+  <section class="filters jobs-filters">
+    <label>From <input id="fFrom" type="date"></label>
+    <label>To <input id="fTo" type="date"></label>
+    <span class="quick" role="group" aria-label="Quick date ranges">
+      <button type="button" class="btn ghost small" data-days="1">24 hours</button>
+      <button type="button" class="btn ghost small" data-days="7">7 days</button>
+      <button type="button" class="btn ghost small" data-days="30">30 days</button>
+      <button type="button" class="btn ghost small" data-days="0">Any time</button>
+    </span>
+    <label>Job type <select id="fType"><option value="">Any type</option></select></label>
+    <label>Started by
+      <select id="fWho">
+        <option value="">Anyone</option>
+        <option value="people" selected>People only (hide system jobs)</option>
+        <option value="system">System only</option>
+      </select>
+    </label>
+    <label class="grow" title="Finds jobs whose targets include this object (e.g. a record's GUID). The API can't filter by target, so this checks the targets of each job matching the other filters; narrow the date range to search faster.">Record / object ID
+      <input id="fObject" type="search" placeholder="e.g. 50928f10-b7ca-4ccf-8d16-b50600d18445" autocomplete="off" spellcheck="false"></label>
+    <label class="grow">Name or email <input id="fUser" type="search" placeholder="e.g. jsmith or @example.com" autocomplete="off"></label>
+    <label>Sort
+      <select id="fSort">
+        <option value="CreatedOn desc">Newest first</option>
+        <option value="CreatedOn">Oldest first</option>
+        <option value="Status">Status</option>
+        <option value="Type">Type</option>
+      </select>
+    </label>
+  </section>
+
+  <section class="status-chips" id="statusChips" aria-label="Filter by status"></section>
+
+  <details class="expr-box">
+    <summary>Search expression <code id="exprPreview"></code></summary>
+    <p class="muted small">This is the Aprimo search expression sent to <code>GET /maintenancejobs</code>. Add your own condition
+      (searchable: <code>CreatedBy</code>, <code>CreatedOn</code>, <code>GroupId</code>, <code>Id</code>, <code>ModifiedBy</code>,
+      <code>ModifiedOn</code>, <code>ProcessCode</code>, <code>SplitContext</code>, <code>SplitIndex</code>, <code>Status</code>,
+      <code>Type</code>); it's combined with AND. Dates are UTC, written like <code>'11/20/2026 06:00:00 PM'</code>.</p>
+    <div class="expr-row">
+      <input id="fExtra" type="text" spellcheck="false" placeholder="e.g. ModifiedOn > '11/19/2026' or GroupId = &quot;…&quot;">
+      <button type="button" id="applyExtra" class="btn ghost">Apply</button>
+      <button type="button" id="copyExpr" class="btn ghost">Copy expression</button>
+    </div>
+  </details>
+
+  <main>
+    <div id="status" class="status"></div>
+    <table class="rules jobs-table">
+      <thead>
+        <tr><th class="c-status">Status</th><th class="c-created">Created (local time)</th><th>Job</th><th class="c-who">Started by</th>
+          <th class="c-num">Targets</th><th class="c-num">Ran for</th><th>Message</th></tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <nav class="pager" id="pager"></nav>
+  </main>
+
+  <aside id="drawer" class="drawer" hidden aria-label="Job details">
+    <div class="drawer-head">
+      <h2 id="drawerTitle">Job</h2>
+      <button class="btn ghost" id="closeDrawer" title="Close (Esc)">✕</button>
+    </div>
+    <div class="drawer-body" id="drawerBody"></div>
+  </aside>
+  <div id="scrim" class="scrim" hidden></div>
+  <div id="toast" class="toast" hidden></div>
+
+  <script type="module" src="jobs.js"></script>
+</body>
+</html>

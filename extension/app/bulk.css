@@ -1,0 +1,13 @@
+/* Bulk Versioning page: our header and banners (styles.css) around the ported React tool (bulk/bulk-versioning.css,
+   Tailwind). The tool's own styles come first so styles.css wins for the shared header, banners and Settings. */
+.bulk-page #bv-root { max-width: 1400px; margin: 0 auto; }
+.bulk-page main { padding-top: 4px; }
+.in-aprimo-page.bulk-page #bv-root { max-width: none; }
+/* Inside Aprimo: Aprimo's teal and Roboto instead of the tool's blue (set on body so dialogs and menus, which render
+   at the end of the page, match too). */
+body.in-aprimo-page.bulk-page {
+  --bv-primary: #008080; --bv-ring: rgba(0, 128, 128, 0.45); --bv-accent: rgba(0, 128, 128, 0.08); --bv-accent-foreground: #006666;
+  --bv-secondary: rgba(0, 128, 128, 0.08); --bv-secondary-foreground: #006666; --bv-border: #e0e0e0; --bv-input: rgba(0, 0, 0, 0.23);
+  --bv-radius: 0.25rem; --font-sans: Roboto, Helvetica, Arial, sans-serif;
+}
+.in-aprimo-page.bulk-page #bv-root { font-family: Roboto, Helvetica, Arial, sans-serif; }

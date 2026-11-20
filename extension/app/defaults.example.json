@@ -1,0 +1,8 @@
+{
+  "authMode": "pkce",
+  "refreshScope": true,
+  "readOnly": false,
+  "clients": {
+    "ps1": { "clientId": "PASTE-PS1-PKCE-CLIENT-ID", "clientSecret": "" }
+  }
+}

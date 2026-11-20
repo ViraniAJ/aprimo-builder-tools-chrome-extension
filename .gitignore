@@ -1,0 +1,16 @@
+# Never commit: the extension's private signing key, local settings and secrets
+keys/
+*.pem
+*.crx
+.env
+extension/app/defaults.json
+backups/
+.claude/
+
+# Dependencies and build leftovers
+node_modules/
+dist/
+.DS_Store
+
+# Parked work (Report Labs port drafts), kept on the local machine only
+labs/
