@@ -26,12 +26,26 @@ export function KnowledgeTab() {
   const refresh = async () => { setStats(await kbStats()); setDocs(await listDocs()); };
   useEffect(() => { refresh().catch((e) => setMsg(`The knowledge index didn't load: ${e.message}`)); }, []);
 
+  // Closing the page stops the crawl and the indexing, so ask first while either is running.
+  useEffect(() => {
+    if (!busy) return;
+    const warn = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ""; };
+    addEventListener("beforeunload", warn);
+    return () => removeEventListener("beforeunload", warn);
+  }, [!!busy]);
+
   const ingest = async (label: string, docsIn: KnowledgeDoc[]) => {
     if (!docsIn.length) { setMsg("Nothing readable was found."); return; }
-    setBusy({ label: `Adding ${docsIn.length} document${docsIn.length === 1 ? "" : "s"} to Wisp's knowledge…`, value: 0 });
-    await addDocs(docsIn, (p) => setBusy({ label: `${label}: indexing ${p.done}/${p.total} passages…`, value: p.done / Math.max(1, p.total) }));
+    // Skip documents already indexed with the same text, so re-running after an interruption only redoes what's missing.
+    const have = new Map((await listDocs()).map((d: any) => [d.id, d.textLength]));
+    const fresh = docsIn.filter((d) => have.get(d.id) !== d.text.length);
+    const kept = docsIn.length - fresh.length;
+    const docsWord = (n: number) => `${n} document${n === 1 ? "" : "s"}`;
+    if (!fresh.length) { setBusy(null); setMsg(`All ${docsWord(docsIn.length)} were already up to date.`); refresh(); return; }
+    setBusy({ label: `Adding ${docsWord(fresh.length)} to Wisp's knowledge…`, value: 0 });
+    await addDocs(fresh, (p) => setBusy({ label: `${label}: indexing ${p.done}/${p.total} documents…`, value: p.done / Math.max(1, p.total) }));
     setBusy(null);
-    setMsg(`Added ${docsIn.length} document${docsIn.length === 1 ? "" : "s"}.`);
+    setMsg(`Added ${docsWord(fresh.length)}${kept ? `; ${docsWord(kept)} were already up to date` : ""}.`);
     refresh();
   };
 

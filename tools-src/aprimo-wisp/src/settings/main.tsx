@@ -61,7 +61,8 @@ function App() {
         {tab === "general" && <General {...props} replay={() => setTab("welcome")} />}
         {tab === "voice" && <VoiceTab {...props} />}
         {tab === "ai" && <AITab {...props} />}
-        {tab === "knowledge" && <KnowledgeTab />}
+        {/* Kept mounted so an indexing run and its progress survive switching tabs. */}
+        <div hidden={tab !== "knowledge"}><KnowledgeTab /></div>
         {tab === "companion" && <Companion {...props} />}
         {tab === "privacy" && <Privacy {...props} />}
         {tab === "checkup" && <Checkup s={s} goTo={(t) => setTab(t as TabId)} />}
