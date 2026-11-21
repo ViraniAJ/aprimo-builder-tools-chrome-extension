@@ -147,7 +147,15 @@
     }
     const main = document.querySelector('div.main-content app-administration-home')?.parentElement;
     if (tool) {
-      if (panel && !panel.classList.contains('mat-expanded') && shownTool !== tool) panel.__armSetOpen?.(true);
+      // Open our section and bring the selected item into view once per arrival. Arriving from a link (e.g. the Wspr
+      // panel's gear) the menu is often drawn after the first check, and Aprimo can redraw it, so this is tracked on
+      // the menu element itself rather than by "did the tool change". Collapsing it by hand afterwards is respected.
+      if (panel && panel.__armShownFor !== tool.id) {
+        panel.__armSetOpen?.(true);
+        panel.__armShownFor = tool.id;
+        const item = panel.querySelector(`a[data-automation-id="arm-${tool.id}-left"]`);
+        setTimeout(() => item?.scrollIntoView({ block: 'nearest' }), 250); // after the expand animation
+      }
       setHeader(tool);
       if (main) {
         for (const child of main.children) if (child !== frame && child.style.display !== 'none') child.style.display = 'none';
@@ -176,6 +184,7 @@
       if (frame) { frame.remove(); frame = null; }
       if (main) for (const child of main.children) if (child.style.display === 'none') child.style.display = '';
       if (shownTool) restoreHeader();
+      if (panel) panel.__armShownFor = null;
       shownTool = null;
     }
   }
