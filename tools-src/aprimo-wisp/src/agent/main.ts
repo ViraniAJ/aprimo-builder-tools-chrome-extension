@@ -244,6 +244,39 @@ import { cleanSelection, describe, lastPointer, mask, snapshot } from "./snapsho
   chrome.storage.local.get("wisp.settings").then((r) => applyLook(r["wisp.settings"] ?? {})).catch(() => {});
   chrome.storage.onChanged.addListener((changes, area) => { if (area === "local" && changes["wisp.settings"]) applyLook(changes["wisp.settings"].newValue ?? {}); });
 
+  // ── A Wisp button in Aprimo's top bar, next to Help ────────────────────────
+  // Clicking it opens the Wisp panel and starts listening (like the shortcut). Aprimo re-renders its header, so the
+  // button is put back whenever it goes missing.
+  const BUTTON_ID = "aprimo-wisp-header-button";
+  const findHelp = (): Element | null =>
+    document.querySelector('app-header-button[title="Help"]') ??
+    [...document.querySelectorAll("header button, mat-toolbar button, [role=banner] button, app-header button")].find((b) => /^help$/i.test((b.getAttribute("aria-label") || b.getAttribute("title") || "").trim())) ?? null;
+  function placeButton() {
+    if (document.getElementById(BUTTON_ID)) return;
+    const help = findHelp();
+    if (!help?.parentElement) return;
+    const b = document.createElement("button");
+    b.id = BUTTON_ID;
+    b.type = "button";
+    b.title = "Ask Aprimo Wisp (Alt+Shift+Space)";
+    b.setAttribute("aria-label", "Ask Aprimo Wisp");
+    b.style.cssText = "width:48px;height:48px;border:0;border-radius:50%;background:transparent;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0;margin:0;vertical-align:middle;transition:background-color .15s";
+    b.addEventListener("mouseenter", () => { b.style.background = "rgba(0,0,0,.04)"; });
+    b.addEventListener("mouseleave", () => { b.style.background = "transparent"; });
+    // A small teal cursor: the same shape and colour as the companion that points on the page.
+    b.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 2.5 L5 19.5 L9.4 15.3 L12.4 21.8 L15.2 20.6 L12.3 14.2 L18.6 14 Z" fill="#008080" stroke="#008080" stroke-width="1.2" stroke-linejoin="round"/></svg>';
+    b.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      chrome.runtime.sendMessage({ kind: "wisp-open", talk: true }).then((r) => {
+        if (!r?.ok) ov().setCaption("Press Alt+Shift+Space to open Aprimo Wisp.");
+      }).catch(() => ov().setCaption("Press Alt+Shift+Space to open Aprimo Wisp."));
+    });
+    help.parentElement.insertBefore(b, help);
+  }
+  placeButton();
+  setInterval(placeButton, 1500);
+
   // Expose for tests in the fake-aprimo harness.
   (window as any).__aprimoWispDebug = { snapshot, findByDescriptor };
 })();

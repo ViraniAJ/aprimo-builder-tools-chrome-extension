@@ -106,6 +106,17 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
   chrome.runtime.sendMessage({ kind: 'wisp-talk' }).catch(() => {});
 });
 
+// The Wisp button in Aprimo's top bar (content/wisp-agent.js): same as the shortcut. The click is a user action, so
+// the side panel may open; open it first, before anything else is awaited.
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (msg?.kind !== 'wisp-open' || !sender.tab) return;
+  if (msg.talk) chrome.storage.session.set({ 'wisp.talkAt': Date.now() });
+  chrome.sidePanel.open({ windowId: sender.tab.windowId })
+    .then(() => { chrome.runtime.sendMessage({ kind: 'wisp-talk' }).catch(() => {}); sendResponse({ ok: true }); })
+    .catch((e) => { console.warn('[wisp] side panel:', e); sendResponse({ ok: false }); });
+  return true;
+});
+
 // Timers and reminders set by asking Wisp ("remind me in 20 minutes to check the upload").
 chrome.alarms.onAlarm.addListener(async (alarm) => {
   if (!alarm.name.startsWith('wisp-timer:')) return;

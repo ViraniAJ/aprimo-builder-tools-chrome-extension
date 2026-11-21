@@ -9,6 +9,7 @@ It is a browser reimplementation of [Wisp](https://github.com/ZakVir/wisp), a na
 - **Open:**
   - Press **Alt+Shift+Space**. It opens the side panel and starts listening; press it again to stop. You can change the keys at `chrome://extensions/shortcuts`.
   - Or open **Administration › External Builder Tools › Aprimo Wisp** and click **Open Wisp panel**.
+- **Or click the teal cursor** in Aprimo's top bar, next to Help (?). It does the same as the shortcut.
 - **Ask:**
   - Hold the mic button and talk, or type.
   - Esc stops an answer or a walkthrough.
