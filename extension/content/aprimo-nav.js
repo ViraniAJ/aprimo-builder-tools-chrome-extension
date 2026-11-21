@@ -153,11 +153,14 @@
         for (const child of main.children) if (child !== frame && child.style.display !== 'none') child.style.display = 'none';
         // Extra route parameters a tool understands (e.g. rule=<id> opens that rule in the Rules Manager).
         const rule = (location.hash.match(/[?&]rule=([0-9a-fA-F-]{32,36})(?:&|$)/) || [])[1] || '';
-        if (!frame || !frame.isConnected || shownTool !== tool || frame.dataset.rule !== rule) {
+        // section=<name> opens that part of a tool's page (e.g. Aprimo Wspr Settings › AI).
+        const section = (location.hash.match(/[?&]section=([\w-]+)(?:&|$)/) || [])[1] || '';
+        const key = `${rule}|${section}`;
+        if (!frame || !frame.isConnected || shownTool !== tool || frame.dataset.key !== key) {
           frame?.remove();
           frame = document.createElement('iframe');
-          frame.src = chrome.runtime.getURL(`${tool.page}?tenant=${encodeURIComponent(tenant)}&embedded=page${rule ? `&rule=${rule}` : ''}`);
-          frame.dataset.rule = rule;
+          frame.src = chrome.runtime.getURL(`${tool.page}?tenant=${encodeURIComponent(tenant)}&embedded=page${rule ? `&rule=${rule}` : ''}${section ? `#${section}` : ''}`);
+          frame.dataset.key = key;
           frame.width = '100%';
           frame.height = '100%';
           frame.allow = 'clipboard-write';

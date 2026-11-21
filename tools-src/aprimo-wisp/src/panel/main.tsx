@@ -13,7 +13,17 @@ import { stopSpeaking } from "../voice/tts";
 import { Button, WispMark, cx } from "../ui/components";
 import { Recorder } from "./recorder";
 
-const openSettings = (hash = "") => chrome.tabs.create({ url: chrome.runtime.getURL(`app/wisp/settings.html${hash}`) });
+// Settings open inside Aprimo (Administration › Aprimo Wspr Settings) in the Aprimo tab of this window; a section
+// such as "#ai" goes straight to that tab of the settings. Without an Aprimo tab, they open as a page of their own.
+const isAprimoShell = (u?: string) => !!u && /^https:\/\/[^/]+\.aprimo\.com\//i.test(u) && !/^https:\/\/[^/]+\.dam\.aprimo\.com\//i.test(u);
+const openSettings = async (hash = "") => {
+  const section = hash.replace(/^#/, "");
+  const [active] = await chrome.tabs.query({ active: true, currentWindow: true });
+  const tab = isAprimoShell(active?.url) ? active : (await chrome.tabs.query({ currentWindow: true, url: "https://*.aprimo.com/*" })).find((t) => isAprimoShell(t.url));
+  if (!tab?.id || !tab.url) { chrome.tabs.create({ url: chrome.runtime.getURL(`app/wisp/settings.html${hash}`) }); return; }
+  const u = new URL(tab.url);
+  await chrome.tabs.update(tab.id, { active: true, url: `${u.origin}${u.pathname}#/management/home?arm=wisp${section ? `&section=${section}` : ""}` });
+};
 const sourceLabel: Record<string, string> = { dev: "Developer docs", help: "Aprimo Help", user: "Your articles", crawl: "Your sites", file: "Your files", recording: "Your recording", video: "Video demo" };
 
 function App() {
