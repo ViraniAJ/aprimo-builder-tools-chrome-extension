@@ -71,7 +71,7 @@ export function defaultSettings(): WispSettings {
     captionPosition: "pointer",
     showHeard: true,
     earcons: true,
-    cursorTheme: "aurora",
+    cursorTheme: "aprimo",
     cursorScale: 1.0,
     outline: "white",
     reduceMotion: "system",

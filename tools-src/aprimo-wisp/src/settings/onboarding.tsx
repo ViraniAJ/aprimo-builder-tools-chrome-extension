@@ -19,8 +19,8 @@ export function Onboarding({ s, update, done }: TabProps & { done: () => void })
   const back = () => setStep(STEPS[Math.max(0, i - 1)]);
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-xl flex-col justify-center p-6">
-      <div className="rounded-2xl border border-line bg-card p-8 shadow-sm">
+    <div className="flex min-h-screen flex-col justify-center bg-page p-6"><div className="mx-auto w-full max-w-xl">
+      <div className="rounded-lg border border-line bg-white p-8">
         {step === "welcome" && (
           <Body title="Meet Aprimo Wisp" sub="Ask anything about Aprimo, out loud or typed. Wisp answers in a friendly voice, and when it's about the page you're on, it shows you where to click.">
             <div className="flex justify-center py-6"><WispMark size={72} /></div>
@@ -68,11 +68,12 @@ export function Onboarding({ s, update, done }: TabProps & { done: () => void })
         </div>
       </div>
     </div>
+    </div>
   );
 }
 
 function Body({ title, sub, children }: { title: string; sub: string; children: React.ReactNode }) {
-  return <div><h1 className="text-2xl font-semibold">{title}</h1><p className="mt-2 text-muted">{sub}</p><div className="mt-5">{children}</div></div>;
+  return <div><h1 className="text-[28px] font-normal">{title}</h1><p className="mt-2 text-muted">{sub}</p><div className="mt-5">{children}</div></div>;
 }
 
 function AIStep({ s, update }: Pick<TabProps, "s" | "update">) {

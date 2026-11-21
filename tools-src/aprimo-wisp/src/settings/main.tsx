@@ -45,15 +45,18 @@ function App() {
   if (tab === "welcome") return <Onboarding {...props} done={() => { update({ onboardingCompleted: true }); setTab("general"); }} />;
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-5xl gap-6 p-6">
-      <nav className="w-48 shrink-0">
-        <div className="mb-4 flex items-center gap-2"><WispMark size={26} /><div><div className="font-semibold leading-tight">Aprimo Wisp</div><div className="text-xs text-muted">Settings</div></div></div>
+    <div className="flex min-h-screen bg-page">
+      <nav className="w-56 shrink-0 border-r border-line bg-white px-2 py-4">
+        <div className="mb-4 flex items-center gap-2 px-3"><WispMark size={24} /><span className="text-[14px] font-medium">Aprimo Wisp</span></div>
         {TABS.map(([id, label]) => (
-          <button key={id} onClick={() => setTab(id)} className={cx("mb-0.5 block w-full rounded-lg px-3 py-1.5 text-left text-sm", tab === id ? "bg-primary text-primary-fg" : "hover:bg-soft")}>{label}</button>
+          <button key={id} onClick={() => setTab(id)} className={cx("mb-0.5 block h-9 w-full rounded-[6px] pl-3 pr-2 text-left text-[14px] font-medium tracking-[0.25px]", tab === id ? "bg-soft text-primary" : "text-fg hover:bg-black/[.04]")}>{label}</button>
         ))}
-        <div className="mt-4"><Button kind="primary" onClick={openPanel}>Open Wisp panel</Button></div>
       </nav>
-      <main className="min-w-0 flex-1">
+      <main className="min-w-0 max-w-4xl flex-1 px-6 py-5">
+        <div className="mb-4 flex items-center justify-between gap-4">
+          <h1 className="text-[28px] font-normal">{TABS.find(([id]) => id === tab)?.[1]}</h1>
+          <Button kind="primary" onClick={openPanel}>Open Wisp panel</Button>
+        </div>
         {!!warnings.length && <div className="mb-3 rounded-lg border border-danger/30 bg-danger/5 p-2 text-xs text-danger">Some saved settings were invalid and were ignored: {warnings.join(", ")}.</div>}
         {tab === "general" && <General {...props} replay={() => setTab("welcome")} />}
         {tab === "voice" && <VoiceTab {...props} />}

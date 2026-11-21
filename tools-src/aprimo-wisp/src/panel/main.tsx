@@ -98,37 +98,39 @@ function App() {
 
   return (
     <div className="flex h-screen flex-col">
-      <header className="flex items-center gap-2 border-b border-line px-3 py-2">
+      <header className="flex h-14 items-center gap-2 border-b border-line bg-white px-3">
         <WispMark />
         <div className="min-w-0 flex-1">
-          <div className="text-sm font-semibold leading-tight">Aprimo Wisp</div>
+          <div className="text-[16px] font-medium leading-tight">Aprimo Wisp</div>
           <button className="truncate text-xs text-muted hover:text-fg" title="Change the AI" onClick={() => openSettings("#ai")}>{p.displayName} · {modelName}</button>
         </div>
-        <div className="flex rounded-lg border border-line p-0.5 text-xs">
-          {(["ask", "teach"] as const).map((t) => <button key={t} onClick={() => setTab(t)} className={cx("rounded-md px-2 py-0.5", tab === t ? "bg-primary text-primary-fg" : "text-muted")}>{t === "ask" ? "Ask" : "Teach"}</button>)}
+        <div className="flex self-stretch">
+          {(["ask", "teach"] as const).map((t) => <button key={t} onClick={() => setTab(t)} className={cx("wisp-label border-b-2 px-3 !text-[13px]", tab === t ? "border-primary text-primary" : "border-transparent text-muted hover:text-fg")}>{t === "ask" ? "Ask" : "Teach"}</button>)}
         </div>
-        <Button kind="ghost" small title="Settings" onClick={() => openSettings()}>⚙︎</Button>
+        <button title="Settings" onClick={() => openSettings()} className="flex h-9 w-9 items-center justify-center rounded-full text-black/60 hover:bg-black/[.04]">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94a7.5 7.5 0 0 0 .05-.94 7.5 7.5 0 0 0-.05-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7 7 0 0 0-1.62-.94l-.36-2.54A.5.5 0 0 0 13.9 2h-3.8a.5.5 0 0 0-.49.42l-.36 2.54a7 7 0 0 0-1.62.94l-2.39-.96a.5.5 0 0 0-.6.22L2.72 8.48a.5.5 0 0 0 .12.64l2.03 1.58a7.5 7.5 0 0 0 0 1.88l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .6.22l2.39-.96c.5.38 1.04.7 1.62.94l.36 2.54a.5.5 0 0 0 .49.42h3.8a.5.5 0 0 0 .49-.42l.36-2.54a7 7 0 0 0 1.62-.94l2.39.96a.5.5 0 0 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64zM12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></svg>
+        </button>
       </header>
 
       {!settings.privacyAccepted && settings.provider !== "local" && (
-        <div className="m-3 rounded-xl border border-primary/40 bg-soft p-3 text-sm">
-          <div className="font-semibold">Before you start</div>
-          <p className="mt-1 text-muted">When you ask, Wisp sends your question, a screenshot of the Aprimo tab and its list of controls to {p.displayName}. Nothing is stored by Wisp outside your browser.</p>
+        <div className="m-3 rounded-lg bg-[rgb(229,246,253)] p-3 text-sm text-[rgb(1,67,97)]">
+          <div className="font-medium">Before you start</div>
+          <p className="mt-1">When you ask, Wisp sends your question, a screenshot of the Aprimo tab and its list of controls to {p.displayName}. Nothing is stored by Wisp outside your browser.</p>
           <div className="mt-2"><Button kind="primary" onClick={() => openSettings("#welcome")}>Set up Wisp</Button></div>
         </div>
       )}
 
       {tab === "teach" ? <Recorder /> : (
         <>
-          <main className="flex-1 space-y-3 overflow-y-auto px-3 py-3">
+          <main className="flex-1 space-y-3 overflow-y-auto bg-page px-3 py-3">
             {!entries.length && <Empty onAprimo={onAprimo} onAsk={(q) => ctrl.current?.ask(q, true)} />}
             {entries.map((e) => <Entry key={e.id} e={e} />)}
-            {listening && <div className="ml-auto max-w-[85%] rounded-2xl rounded-br-sm bg-primary/15 px-3 py-2 text-sm italic text-muted">{partial || "Listening…"}</div>}
+            {listening && <div className="ml-auto max-w-[85%] rounded-2xl rounded-br-sm bg-soft px-3 py-2 text-sm italic text-muted">{partial || "Listening…"}</div>}
             <div ref={bottom} />
           </main>
 
           {guide.active && (
-            <div className="mx-3 mb-2 flex items-center gap-2 rounded-lg border border-primary/40 bg-soft px-3 py-2 text-xs">
+            <div className="mx-3 mb-2 flex items-center gap-2 rounded-lg border border-line bg-white px-3 py-2 text-xs">
               <span className="h-2 w-2 shrink-0 rounded-full bg-primary wisp-pulse" />
               <span className="flex-1">Watching you do the step. Click where Wisp points; it shows the next one.</span>
               <Button small onClick={() => ctrl.current?.ask("what's the next step", true)}>Next</Button>
@@ -137,13 +139,13 @@ function App() {
           )}
           {(status || caption) && <div className="truncate px-4 pb-1 text-xs text-muted">{status || caption}</div>}
           {micError && (
-            <div className="mx-3 mb-2 rounded-lg border border-danger/30 bg-danger/5 px-3 py-2 text-xs text-danger">
+            <div className="mx-3 mb-2 rounded-lg bg-[rgb(253,237,237)] px-3 py-2 text-xs text-[rgb(95,33,32)]">
               {micError}{" "}
               {/microphone/i.test(micError) && <button className="underline" onClick={() => chrome.tabs.create({ url: chrome.runtime.getURL("app/wisp/mic-permission.html") })}>Allow the microphone</button>}
             </div>
           )}
 
-          <footer className="border-t border-line p-2">
+          <footer className="border-t border-line bg-white p-2">
             <div className="flex items-end gap-2">
               <button
                 title="Hold to talk (or press Alt+Shift+Space)"
@@ -155,7 +157,7 @@ function App() {
               </button>
               <textarea rows={1} value={text} placeholder="Ask about this Aprimo page…" onChange={(e) => setText(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
-                className="max-h-32 min-h-10 flex-1 resize-none rounded-xl border border-line bg-bg px-3 py-2 text-sm outline-none focus:border-primary" />
+                className="max-h-32 min-h-10 flex-1 resize-none rounded-lg border border-black/[.23] bg-white px-3 py-2 text-sm outline-none hover:border-black/90 focus:border-primary focus:shadow-[inset_0_0_0_1px_var(--w-primary)]" />
               {status ? <Button onClick={stopAll}>Stop</Button> : <Button kind="primary" onClick={send} disabled={!text.trim()}>Ask</Button>}
             </div>
             <div className="mt-1 px-1 text-[11px] text-muted">Hold the mic or press Alt+Shift+Space. Esc stops.</div>
@@ -172,11 +174,11 @@ function Empty({ onAprimo, onAsk }: { onAprimo: boolean; onAsk: (q: string) => v
     : ["What is a content type in Aprimo?", "How do I authenticate with the Aprimo API?", "What can you do?"];
   return (
     <div className="mt-6 text-center">
-      <div className="mx-auto mb-3 w-fit"><WispMark size={40} /></div>
-      <div className="font-semibold">Ask anything about Aprimo</div>
+      <div className="wisp-tile mx-auto mb-3 h-12 w-12"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" /></svg></div>
+      <div className="text-[18px] font-medium">Ask anything about Aprimo</div>
       <p className="mx-auto mt-1 max-w-xs text-xs text-muted">{onAprimo ? "Wisp sees this Aprimo page and points to the right spot." : "Open an Aprimo tab and Wisp can point at things on the page too."}</p>
       <div className="mt-4 flex flex-col items-center gap-2">
-        {examples.map((q) => <button key={q} onClick={() => onAsk(q)} className="rounded-full border border-line px-3 py-1 text-xs hover:bg-soft">{q}</button>)}
+        {examples.map((q) => <button key={q} onClick={() => onAsk(q)} className="rounded-full border border-primary/50 bg-white px-3 py-1 text-[13px] text-primary hover:bg-soft">{q}</button>)}
       </div>
     </div>
   );
@@ -193,13 +195,13 @@ function Entry({ e }: { e: ChatEntry }) {
   };
   return (
     <div className="space-y-1.5">
-      {e.kind !== "guide" && <div className="ml-auto w-fit max-w-[85%] rounded-2xl rounded-br-sm bg-primary px-3 py-2 text-sm text-primary-fg">{e.question}</div>}
-      <div className={cx("max-w-[95%] rounded-2xl rounded-bl-sm border border-line bg-card px-3 py-2 text-sm", r.error && "border-danger/40")}>
-        {e.kind === "guide" && <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-primary">Next step</div>}
+      {e.kind !== "guide" && <div className="ml-auto w-fit max-w-[85%] rounded-2xl rounded-br-sm bg-primary px-3 py-2 text-sm text-white">{e.question}</div>}
+      <div className={cx("max-w-[95%] rounded-lg border border-line bg-white px-3 py-2 text-sm", r.error && "border-danger/40")}>
+        {e.kind === "guide" && <div className="wisp-label mb-1 !text-[11px] text-primary">Next step</div>}
         {shown ? <div className="whitespace-pre-wrap">{shown}</div> : <div className="text-muted">{e.status || "…"}</div>}
         {e.card && (
-          <div className="mt-2 rounded-lg border border-line bg-bg p-2">
-            <div className="mb-1 text-xs font-semibold">{e.card.title}</div>
+          <div className="mt-2 rounded-lg border border-line bg-page p-2">
+            <div className="mb-1 text-xs font-medium">{e.card.title}</div>
             {e.card.lines.map((l, i) => <div key={i} className="text-xs">{/^[•\-]/.test(l) || e.card!.lines.length < 2 ? l : `• ${l}`}</div>)}
           </div>
         )}
@@ -221,7 +223,7 @@ function Entry({ e }: { e: ChatEntry }) {
           <div className="mt-2 flex flex-wrap gap-1">
             {cited.map((n) => (
               <a key={n.id} href={n.video ? videoLink(n.video.url, n.video.start ?? 0) : n.url} target="_blank" rel="noreferrer" title={n.title}
-                className="max-w-full truncate rounded-full border border-line bg-bg px-2 py-0.5 text-[11px] text-fg no-underline hover:bg-soft">
+                className="max-w-full truncate rounded-full bg-black/[.08] px-2.5 py-0.5 text-[12px] text-fg no-underline hover:bg-black/[.12]">
                 <span className="text-muted">{sourceLabel[n.source] ?? n.source}:</span> {n.title.split(" > ").slice(-1)[0]}
               </a>
             ))}

@@ -20,6 +20,7 @@ export interface CompanionLook {
 
 /** Wisp's companion themes: accent, secondary accent (the palette's two ends). */
 export const THEMES: Record<string, { name: string; a: string; b: string }> = {
+  aprimo: { name: "Aprimo", a: "#008080", b: "#4DB6AC" },
   aurora: { name: "Aurora", a: "#2B6BFF", b: "#9BE832" },
   quasar: { name: "Quasar", a: "#C4248F", b: "#FF8A2A" },
   magma: { name: "Magma", a: "#E8452C", b: "#B4175F" },
@@ -36,26 +37,27 @@ export const THEMES: Record<string, { name: string; a: string; b: string }> = {
   graphite: { name: "Graphite", a: "#5B6B80", b: "#9AA7B8" },
 };
 
-const DEFAULT_LOOK: CompanionLook = { theme: "aurora", scale: 1, outline: "white", reduceMotion: "system", captionSize: "medium", captionPosition: "pointer", showCaptions: true };
+const DEFAULT_LOOK: CompanionLook = { theme: "aprimo", scale: 1, outline: "white", reduceMotion: "system", captionSize: "medium", captionPosition: "pointer", showCaptions: true };
 const CAPTION_SCALE = { small: 0.87, medium: 1, large: 1.3 };
 const NS = "http://www.w3.org/2000/svg";
 
 const CSS_TEXT = `
 :host{all:initial}
-.layer{position:fixed;inset:0;pointer-events:none;z-index:2147483646;font:14px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;--a:#2B6BFF;--b:#9BE832}
+.layer{position:fixed;inset:0;pointer-events:none;z-index:2147483646;font:400 14px/1.43 Roboto,"Helvetica Neue",Helvetica,Arial,sans-serif;letter-spacing:.25px;--a:#008080;--b:#4DB6AC}
 svg.marks{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
 .cursor{position:absolute;width:30px;height:30px;margin:-4px 0 0 -8px;transform-origin:8px 4px;transition:left .45s cubic-bezier(.2,.8,.2,1),top .45s cubic-bezier(.2,.8,.2,1),opacity .3s;filter:drop-shadow(0 2px 5px rgba(0,0,0,.35))}
 .reduce .cursor{transition:opacity .2s}
-.tag{position:absolute;background:var(--a);color:#fff;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap;transform:translate(16px,18px)}
-.caption{position:absolute;max-width:min(560px,80vw);background:rgba(15,23,42,.92);color:#f8fafc;padding:9px 14px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.25);opacity:0;transition:opacity .25s}
+.tag{position:absolute;background:var(--a);color:#fff;padding:3px 10px;border-radius:16px;font-size:13px;font-weight:500;white-space:nowrap;transform:translate(16px,18px);box-shadow:0 1px 3px rgba(0,0,0,.2),0 2px 2px rgba(0,0,0,.14)}
+.caption{position:absolute;max-width:min(560px,80vw);background:#323232;color:#fff;padding:10px 16px;border-radius:4px;box-shadow:0 3px 5px -1px rgba(0,0,0,.2),0 6px 10px 0 rgba(0,0,0,.14),0 1px 18px 0 rgba(0,0,0,.12);opacity:0;transition:opacity .25s}
 .caption.bottom{left:50%;bottom:28px;transform:translateX(-50%)}
 .caption.on{opacity:1}
-.caption.partial{color:#cbd5e1}
-.chip{position:absolute;top:16px;right:16px;max-width:360px;background:#fff;color:#0f172a;border:1px solid #cbd5e1;border-left:4px solid var(--a);border-radius:10px;padding:10px 12px;box-shadow:0 8px 24px rgba(0,0,0,.18);pointer-events:auto}
-.chip .n{font-size:11px;font-weight:700;color:var(--a);text-transform:uppercase;letter-spacing:.04em}
-.chip .t{margin:4px 0 8px}
-.chip button{font:inherit;font-size:12px;border:1px solid #cbd5e1;background:#f8fafc;border-radius:6px;padding:3px 10px;margin-right:6px;cursor:pointer}
-.chip button.primary{background:var(--a);color:#fff;border-color:var(--a)}
+.caption.partial{color:rgba(255,255,255,.7)}
+.chip{position:absolute;top:16px;right:16px;max-width:360px;background:#fff;color:rgba(0,0,0,.87);border-radius:4px;padding:12px 16px;box-shadow:0 5px 5px -3px rgba(0,0,0,.2),0 8px 10px 1px rgba(0,0,0,.14),0 3px 14px 2px rgba(0,0,0,.12);pointer-events:auto}
+.chip .n{font-size:12px;font-weight:500;color:var(--a);text-transform:uppercase;letter-spacing:1.25px}
+.chip .t{margin:6px 0 10px;font-size:14px}
+.chip button{font:inherit;font-size:13px;font-weight:500;letter-spacing:1.25px;text-transform:uppercase;border:0;background:transparent;color:var(--a);border-radius:4px;padding:5px 10px;margin-right:4px;cursor:pointer}
+.chip button:hover{background:rgba(0,128,128,.08)}
+.chip button.primary{background:var(--a);color:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2),0 2px 2px rgba(0,0,0,.14)}
 @keyframes pulse{0%{stroke-opacity:.95}50%{stroke-opacity:.5}100%{stroke-opacity:.95}}
 .pulse{animation:pulse 1.4s ease-in-out infinite}
 .reduce .pulse{animation:none}
