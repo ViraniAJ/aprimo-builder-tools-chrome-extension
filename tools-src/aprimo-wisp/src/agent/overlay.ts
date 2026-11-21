@@ -88,6 +88,11 @@ svg.marks{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
 @keyframes pulse{0%{stroke-opacity:.95}50%{stroke-opacity:.45}100%{stroke-opacity:.95}}
 .pulse{animation:pulse 1.4s ease-in-out infinite}
 .reduce .pulse{animation:none}
+.spark{position:absolute;left:0;top:0;width:var(--s,12px);height:var(--s,12px);margin:calc(var(--s,12px)/-2) 0 0 calc(var(--s,12px)/-2);opacity:0;animation:spark var(--d,.75s) ease-out forwards}
+.spark svg{display:block;width:100%;height:100%}
+@keyframes spark{0%{opacity:1;transform:translate(var(--x0),var(--y0)) scale(.2) rotate(0)}55%{opacity:1}100%{opacity:0;transform:translate(var(--x1),var(--y1)) scale(1) rotate(100deg)}}
+.cursor.pop .body{animation:pop .5s cubic-bezier(.3,1.7,.5,1)}
+@keyframes pop{0%{transform:scale(0) rotate(-30deg)}100%{transform:scale(1) rotate(0)}}
 `;
 
 function cursorSVG(outline: CompanionLook["outline"]): string {
@@ -125,6 +130,9 @@ export class Overlay {
   private idleSince = 0;
   private summoned = false; // a question is in progress
   holdShapes = false; // walkthroughs keep marks until the step changes
+  private pace = 1; // the intro runs the usual moves faster
+  private introActive = false;
+  private lastSpark = 0;
 
   constructor() {
     this.host = document.createElement("div");
@@ -200,7 +208,7 @@ export class Overlay {
   private flyTo(to: () => Pt | null, now: number) {
     const dest = to() ?? this.pos;
     const dist = Math.hypot(dest.x - this.pos.x, dest.y - this.pos.y);
-    const dur = this.reduced() ? 0 : Math.min(0.95, Math.max(0.32, dist / 1300)) * 1000;
+    const dur = this.reduced() ? 0 : (Math.min(0.95, Math.max(0.32, dist / 1300)) * 1000) / this.pace;
     this.flight = { from: { ...this.pos }, to, t0: now, dur, bend: (Math.random() < 0.5 ? -1 : 1) * Math.min(120, dist * 0.18) };
   }
 
@@ -213,6 +221,59 @@ export class Overlay {
     if (item.kind === "CIRCLE") return gestureCircle({ x: rs[0].x, y: rs[0].y, w: rs[0].width, h: rs[0].height }, item.seed)[0];
     if (item.kind === "UNDERLINE") return { x: rs[0].x, y: rs[0].y + rs[0].height + 3 };
     return center(rs[0]); // ARROW and PATH start at their first target
+  }
+
+  // ── The intro, played when the header button opens the panel ───────────────
+  /** A burst of little four-point stars around a point. */
+  sparkle(at: Pt, count = 10, spread = 48, size = 12) {
+    if (this.reduced()) return;
+    this.ensureAttached();
+    const fills = ["var(--a)", "var(--b)", "#80CBC4", "#ffffff"];
+    for (let i = 0; i < count; i++) {
+      const s = document.createElement("div");
+      s.className = "spark";
+      const ang = (i / count) * Math.PI * 2 + Math.random() * 0.6;
+      const dist = spread * (0.55 + Math.random() * 0.6);
+      const sz = size * (0.6 + Math.random() * 0.7);
+      s.style.setProperty("--s", `${sz.toFixed(1)}px`);
+      s.style.setProperty("--d", `${(0.55 + Math.random() * 0.35).toFixed(2)}s`);
+      s.style.setProperty("--x0", `${at.x}px`); s.style.setProperty("--y0", `${at.y}px`);
+      s.style.setProperty("--x1", `${(at.x + Math.cos(ang) * dist).toFixed(1)}px`); s.style.setProperty("--y1", `${(at.y + Math.sin(ang) * dist).toFixed(1)}px`);
+      const fill = fills[i % fills.length];
+      s.innerHTML = `<svg viewBox="0 0 12 12"><path d="M6 0 L7.3 4.7 L12 6 L7.3 7.3 L6 12 L4.7 7.3 L0 6 L4.7 4.7 Z" fill="${fill}" stroke="${fill === "#ffffff" ? "var(--a)" : "none"}" stroke-width=".8"/></svg>`;
+      this.layer.appendChild(s);
+      setTimeout(() => s.remove(), 1000);
+    }
+  }
+
+  /**
+   * A short showcase: the companion pops out of the button in a burst of sparkles, points at something on the page,
+   * circles something else, then flies off to the right edge where the panel is opening. Runs at 1.8x the normal
+   * pace and clears up after itself. Skipped with reduced motion.
+   */
+  intro(from: Pt, demo: { point?: Getter; circle?: Getter }) {
+    if (this.reduced()) return;
+    this.ensureAttached();
+    this.clearShapes();
+    this.introActive = true;
+    this.pace = 1.8;
+    this.pos = { ...from };
+    this.visible = true;
+    this.cursor.classList.remove("pop");
+    void this.cursor.offsetWidth;
+    this.cursor.classList.add("pop");
+    this.sparkle(from, 12, 54, 13);
+    if (demo.point) this.add("POINT", [demo.point], "Ask me anything");
+    if (demo.circle) this.add("CIRCLE", [demo.circle], "I'll show you where");
+    this.add("POINT", [() => new DOMRect(innerWidth - 18, Math.round(innerHeight * 0.4), 1, 1)], "Ask away");
+  }
+
+  private endIntro() {
+    this.introActive = false;
+    this.pace = 1;
+    this.sparkle(this.pos, 9, 34, 11);
+    setTimeout(() => { if (!this.introActive && !this.current && !this.queue.length) this.clearShapes(); }, 250);
+    if (!this.look.keepOnScreen && !this.summoned) this.visible = false;
   }
 
   setPointer(p: Pt | null) {
@@ -355,8 +416,12 @@ export class Overlay {
     }
     if (!this.flight && tip) this.pos = tip;
 
+    // The intro leaves a trail of sparkles while it flies, and ends once its moves are done.
+    if (this.introActive && this.flight && now - this.lastSpark > 55) { this.lastSpark = now; this.sparkle(this.pos, 2, 16, 8); }
+
     // Idle: go back beside the user's pointer, then fade (unless kept on screen).
     const idle = !this.flight && !this.current && !this.queue.length;
+    if (idle && this.introActive) this.endIntro();
     if (idle && this.visible) {
       const home = this.beside();
       if (!this.summoned && now - this.idleSince > (this.items.length ? 1600 : 400)) {
@@ -399,7 +464,9 @@ export class Overlay {
     this.ring.classList.add("go");
   }
 
-  private durationOf(item: Item): number {
+  private durationOf(item: Item): number { return this.baseDuration(item) / this.pace; }
+
+  private baseDuration(item: Item): number {
     if (this.reduced()) return item.kind === "POINT" ? POINT_HOLD : 0.2;
     if (item.kind === "POINT") return POINT_HOLD;
     if (item.kind === "STROKES") return item.strokes!.reduce((s, st) => s + drawDuration(strokeLength(st)) + 0.12, 0);
@@ -432,7 +499,7 @@ export class Overlay {
   /** Draws an item at its current progress; returns where the companion should be (pen tip or resting point). */
   private drawItem(item: Item, now: number): Pt | null {
     if (item.start === null) return null;
-    const t = (now - item.start) / 1000;
+    const t = ((now - item.start) / 1000) * this.pace;
     const reduce = this.reduced();
     const tipOf = (s: Stroke, p: number) => s[Math.min(s.length - 1, Math.max(0, Math.round(p * (s.length - 1))))];
     if (item.kind === "STROKES") {

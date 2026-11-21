@@ -277,8 +277,15 @@ import { cleanSelection, describe, lastPointer, mask, snapshot } from "./snapsho
     b.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopPropagation();
-      chrome.runtime.sendMessage({ kind: "wisp-open", talk: true }).then((r) => {
-        if (!r?.ok) ov().setCaption("Press Alt+Shift+Space to open Aprimo Wspr.");
+      // Ask for the panel first: Chrome only lets it open straight after a click. The sparkles start at once; the
+      // showcase plays when the panel was closed (a click while it's open just toggles listening).
+      const r = b.getBoundingClientRect();
+      const from = { x: r.x + r.width / 2, y: r.y + r.height / 2 };
+      const sent = chrome.runtime.sendMessage({ kind: "wisp-open", talk: true });
+      ov().sparkle(from, 8, 30, 10);
+      sent.then((res) => {
+        if (!res?.ok) { ov().setCaption("Press Alt+Shift+Space to open Aprimo Wspr."); return; }
+        if (!res.wasOpen) ov().intro(from, introTargets(b));
       }).catch(() => ov().setCaption("Press Alt+Shift+Space to open Aprimo Wspr."));
     });
     wrap.appendChild(b);
@@ -286,6 +293,26 @@ import { cleanSelection, describe, lastPointer, mask, snapshot } from "./snapsho
   }
   placeButton();
   setInterval(placeButton, 1500);
+
+  /** Things on the current page for the intro to point at and circle: the page heading, then a mid-sized control or
+   * card in the content. Falls back to spots in the page when nothing suitable is visible. */
+  function introTargets(button: Element): { point?: () => DOMRect | null; circle?: () => DOMRect | null } {
+    const live = (el: Element) => () => (el.isConnected ? el.getBoundingClientRect() : null);
+    const onScreen = (el: Element, minW: number, maxW: number, minH: number, maxH: number) => {
+      const q = el.getBoundingClientRect();
+      if (q.width < minW || q.width > maxW || q.height < minH || q.height > maxH) return false;
+      if (q.top < 70 || q.left < 0 || q.bottom > innerHeight - 20 || q.right > innerWidth - 40) return false; // below the top bar
+      const st = getComputedStyle(el);
+      return st.visibility !== "hidden" && st.opacity !== "0" && !el.closest("#aprimo-wisp-overlay-host") && el !== button;
+    };
+    const first = (sel: string, ...size: [number, number, number, number]) => [...document.querySelectorAll(sel)].find((el) => onScreen(el, ...size));
+    const heading = first('h1[data-automation-id="standard-header-title"], main h1, h1, h2', 40, 600, 14, 80);
+    const circle = first("mat-card, .mat-mdc-card, [role=main] button, main button, .main-content button, .main-content a[href], .admin-navigation-item a", 70, 480, 24, 220);
+    return {
+      point: heading ? live(heading) : () => new DOMRect(innerWidth * 0.28, innerHeight * 0.3, 1, 1),
+      circle: circle ? live(circle) : () => new DOMRect(innerWidth * 0.42, innerHeight * 0.5, 220, 64),
+    };
+  }
 
   // Expose for tests in the fake-aprimo harness.
   (window as any).__aprimoWispDebug = { snapshot, findByDescriptor };

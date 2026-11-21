@@ -9,7 +9,7 @@ It is a browser reimplementation of [Wisp](https://github.com/ZakVir/wisp), a na
 - **Open:**
   - Press **Alt+Shift+Space**. It opens the side panel and starts listening; press it again to stop. You can change the keys at `chrome://extensions/shortcuts`.
   - Or open **Administration › External Builder Tools › Aprimo Wspr Settings** and click **Open Wspr panel**.
-- **Or click the teal cursor** in Aprimo's top bar, next to Help (?). It does the same as the shortcut. While a walkthrough runs, its card sits in the bottom-right corner.
+- **Or click the teal cursor** in Aprimo's top bar, next to Help (?). It does the same as the shortcut, and when the panel was closed it plays a short intro first: the cursor pops out in a burst of sparkles, points at the page heading, circles something on the page, and flies off to the panel. Reduce motion turns the intro off. While a walkthrough runs, its card sits in the bottom-right corner.
 - **Ask:**
   - Hold the mic button and talk, or type.
   - Esc stops an answer or a walkthrough.
