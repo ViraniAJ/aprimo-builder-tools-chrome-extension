@@ -124,6 +124,7 @@ import { cleanSelection, describe, lastPointer, mask, snapshot } from "./snapsho
     o.holdShapes = true;
     if (caption) o.setCaption(caption);
     o.setChip({ label: "Wspr is watching", text: "Do the step; Wspr will show the next one. Esc stops.", last: false, onStop: () => endWatch("button") });
+    o.setEdgeGlow(true);
     bumpIdle();
   }
   function bumpIdle() {
@@ -131,7 +132,9 @@ import { cleanSelection, describe, lastPointer, mask, snapshot } from "./snapsho
     clearTimeout(watch.idle);
     watch.idle = setTimeout(() => endWatch("idle"), 300_000);
   }
-  function stopWatch() {
+  /** Stops watching. keepGlow: just between steps of a walkthrough (the window glow stays until it ends). */
+  function stopWatch(keepGlow = false) {
+    if (!keepGlow) ov().setEdgeGlow(false);
     if (!watch) return;
     clearTimeout(watch.timer); clearTimeout(watch.idle);
     mo.disconnect();
@@ -171,7 +174,7 @@ import { cleanSelection, describe, lastPointer, mask, snapshot } from "./snapsho
         const changed = w.muts >= 3 || location.hash !== w.baseRoute;
         if (!w.used && !changed) return; // a stray click: keep waiting
         const ev: AgentEvent = { kind: "wisp-event", op: "guide-settled", turn: w.turn, actions: w.actions, clickedTarget: w.clicked, changed };
-        stopWatch();
+        stopWatch(true);
         ov().clearShapes();
         send(ev);
         return;
@@ -271,7 +274,7 @@ import { cleanSelection, describe, lastPointer, mask, snapshot } from "./snapsho
       case "snapshot": { const s = snapshot(msg.max); known = s.byId; sendResponse({ facts: s.facts }); return; }
       case "draw": draw(msg.cmd); sendResponse({ ok: true }); return;
       case "caption": ov().setCaption(msg.text, msg.hold ?? !msg.final, !msg.final); sendResponse({ ok: true }); return;
-      case "clear": stopWatch(); ov().holdShapes = false; ov().clearAll(); plan = []; sendResponse({ ok: true }); return;
+      case "clear": stopWatch(true); ov().holdShapes = false; ov().clearAll(); plan = []; sendResponse({ ok: true }); return;
       case "companion": if (msg.state === "thinking") ov().summon(true); else overlay?.release(); sendResponse({ ok: true }); return;
       case "look": savedLook = { ...savedLook, ...msg.look }; overlay?.setLook(msg.look); sendResponse({ ok: true }); return;
       case "steps": planTurn = msg.turn; plan = msg.steps; at = 0; showStep(); sendResponse({ ok: true }); return;

@@ -86,6 +86,11 @@ svg.marks{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
 .chip button{font:inherit;font-size:13px;font-weight:500;letter-spacing:1.25px;text-transform:uppercase;border:0;background:transparent;color:var(--a);border-radius:4px;padding:5px 10px;margin-right:4px;cursor:pointer}
 .chip button:hover{background:rgba(0,128,128,.08)}
 .chip button.primary{background:var(--a);color:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2),0 2px 2px rgba(0,0,0,.14)}
+.edge{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .5s ease;border-radius:0;
+  box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--a) 75%,transparent),inset 0 0 28px 6px color-mix(in srgb,var(--a) 32%,transparent),inset 0 0 90px 10px color-mix(in srgb,var(--b) 16%,transparent)}
+.edge.on{opacity:1;animation:edge 3.2s ease-in-out infinite}
+@keyframes edge{0%,100%{opacity:.6}50%{opacity:1}}
+.reduce .edge.on{animation:none;opacity:.8}
 @keyframes pulse{0%{stroke-opacity:.95}50%{stroke-opacity:.45}100%{stroke-opacity:.95}}
 .pulse{animation:pulse 1.4s ease-in-out infinite}
 .reduce .pulse{animation:none}
@@ -116,6 +121,7 @@ export class Overlay {
   private tag: HTMLElement;
   private caption: HTMLElement;
   private chip: HTMLElement | null = null;
+  private edge: HTMLElement;
   private items: Item[] = []; // drawn or drawing
   private queue: Item[] = []; // waiting for the companion
   private current: Item | null = null;
@@ -149,7 +155,9 @@ export class Overlay {
     this.tag.className = "tag";
     this.caption = document.createElement("div");
     this.caption.className = "caption";
-    this.layer.append(this.svg, this.ring, this.cursor, this.tag, this.caption);
+    this.edge = document.createElement("div");
+    this.edge.className = "edge";
+    this.layer.append(this.edge, this.svg, this.ring, this.cursor, this.tag, this.caption);
     this.root.append(style, this.layer);
     document.documentElement.appendChild(this.host);
     this.setLook(this.look);
@@ -282,6 +290,12 @@ export class Overlay {
     this.tag.classList.remove("on");
     this.idleSince = performance.now();
     this.kick();
+  }
+
+  /** A soft glow around the edge of the window while Wspr watches a walkthrough step (like a browser being driven). */
+  setEdgeGlow(on: boolean) {
+    if (on) this.ensureAttached();
+    this.edge.classList.toggle("on", on);
   }
 
   /** Is this page point on (or within a few px of) something currently highlighted? */
