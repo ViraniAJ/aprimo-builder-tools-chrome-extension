@@ -14,6 +14,7 @@ import { listen, speechAvailable, type Listener } from "../voice/stt";
 import { stopSpeaking } from "../voice/tts";
 import { cx } from "../ui/components";
 import { Entry, openSettings, sourceLabel } from "./shared";
+import { TalkRing, VoiceGlow, useMicStream, useSpeaking, voiceState } from "../ui/voice";
 
 const toPage = (msg: Record<string, unknown>) => parent.postMessage({ wspr: true, ...msg }, "*");
 const HIDE_AFTER_MS = 15_000;
@@ -120,14 +121,17 @@ function Bar() {
 
   const last = entries[entries.length - 1];
   const busy = !!status && !last?.done;
-  const glow = listening || busy;
+  const speaking = useSpeaking();
+  const mic = useMicStream(listening);
+  const voice = voiceState({ listening, busy, speaking });
 
   if (!settings) return null;
   const needsSetup = !settings.privacyAccepted && settings.provider !== "local";
 
   return (
     <div className="flex min-h-screen items-end justify-center px-10 pb-6 pt-12" onMouseEnter={() => { hover.current = true; }} onMouseLeave={() => { hover.current = false; }}>
-      <div ref={card} className={cx("wspr-card relative w-full max-w-[720px]", glow ? "glow" : guide.active && "watching")}>
+      <div ref={card} className={cx("wspr-card relative w-full max-w-[720px]", voice === "idle" && guide.active && "watching")}>
+        <VoiceGlow state={voice} stream={mic}>
         <div className="relative overflow-hidden rounded-[20px] border border-black/[.05] bg-white/[.97] shadow-[0_12px_36px_-6px_rgba(0,0,0,.12),0_2px_10px_-2px_rgba(0,0,0,.06)] backdrop-blur">
           {history && entries.length > 1 && (
             <div className="max-h-[340px] space-y-3 overflow-y-auto border-b border-line bg-page px-4 py-3">
@@ -168,10 +172,8 @@ function Bar() {
 
           <div className="flex items-center gap-2 px-2.5 py-2.5">
             <button title={listening ? "Stop listening" : "Talk (Alt+Shift+Space)"} aria-label={listening ? "Stop listening" : "Talk"} onClick={toggleListen}
-              className={cx("wspr-orb relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white", listening && "listening", busy && "thinking")}>
-              {listening
-                ? <span className="flex h-4 items-end gap-[3px]">{[0, 1, 2, 3].map((i) => <span key={i} className="wspr-wave w-[3px] rounded-full bg-white" style={{ animationDelay: `${i * 0.12}s` }} />)}</span>
-                : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" /></svg>}
+              className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-transform hover:scale-[1.06]">
+              <TalkRing state={voice} stream={mic} />
             </button>
             <input ref={input} value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); send(); } }}
               placeholder={guide.active ? "Ask about this step…" : "Ask Wspr…"} aria-label="Ask Wspr"
@@ -188,6 +190,7 @@ function Bar() {
             <IconButton title="Close (Esc)" onClick={() => { stopAll(); toPage({ type: "hide" }); }}><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" /></IconButton>
           </div>
         </div>
+        </VoiceGlow>
       </div>
     </div>
   );

@@ -61,6 +61,8 @@
   "license": "BSD-3-Clause",
   "dependencies": {
     "@huggingface/transformers": "^3.8.1",
-    "@mlc-ai/web-llm": "^0.2.89"
+    "@mlc-ai/web-llm": "^0.2.89",
+    "voice-glow": "0.5.0",
+    "voice-ring": "0.2.0"
   }
 }

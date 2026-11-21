@@ -9,6 +9,7 @@ import { activeTab, isAprimoUrl, toTab } from "../core/turn";
 import { initKB } from "../kb/kb-client";
 import { videoLink } from "../kb/transcript";
 import { listen, micPermission, speechAvailable, type Listener } from "../voice/stt";
+import { TalkRing, VoiceGlow, useMicStream, useSpeaking, voiceState } from "../ui/voice";
 import { stopSpeaking } from "../voice/tts";
 import { Button, WispMark, cx } from "../ui/components";
 import { Intro, introReduced } from "./intro";
@@ -108,6 +109,10 @@ function App() {
     ctrl.current?.ask(q, true);
   };
 
+  const speaking = useSpeaking();
+  const mic = useMicStream(listening);
+  const voice = voiceState({ listening, busy: !!status, speaking });
+
   if (!settings) return <div className="p-4 text-muted">Loading…</div>;
   const p = PROVIDERS[settings.provider];
   const modelName = settings.provider === "nvidia-nim" && settings.smartRouting ? "Smart routing" : modelInfo(settings.providers[settings.provider].model).displayName;
@@ -169,6 +174,7 @@ function App() {
             </div>
           )}
 
+          <VoiceGlow state={voice} stream={mic}>
           <footer className="border-t border-line bg-white p-2">
             <div className="flex items-end gap-2">
               <button
@@ -176,8 +182,8 @@ function App() {
                 onPointerDown={(ev) => { ev.preventDefault(); startListen(); }}
                 onPointerUp={stopListen}
                 onPointerLeave={() => listening && stopListen()}
-                className={cx("flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white shadow", listening ? "bg-danger wisp-pulse" : "wisp-gradient")}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" /></svg>
+                className="flex h-10 w-10 shrink-0 touch-none items-center justify-center rounded-full transition-transform hover:scale-[1.06]">
+                <TalkRing state={voice} stream={mic} />
               </button>
               <textarea rows={1} value={text} placeholder="Ask about this Aprimo page…" onChange={(e) => setText(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
@@ -186,6 +192,7 @@ function App() {
             </div>
             <div className="mt-1 px-1 text-[11px] text-muted">Hold the mic or press Alt+Shift+Space. Esc stops.</div>
           </footer>
+          </VoiceGlow>
         </>
       )}
     </div>
