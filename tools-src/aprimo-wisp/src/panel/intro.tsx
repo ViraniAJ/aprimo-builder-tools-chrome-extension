@@ -39,17 +39,30 @@ export function Intro({ onDone }: { onDone: () => void }) {
 
   useEffect(() => {
     const finish = () => { if (!done.current) { done.current = true; onDone(); } };
-    const box = scene.current!.getBoundingClientRect();
-    const rel = (el: HTMLElement) => { const r = el.getBoundingClientRect(); return new DOMRect(r.x - box.x, r.y - box.y, r.width, r.height); };
-    const h = rel(heading.current!), c = rel(card.current!);
-    const start: Pt = { x: box.width - 26, y: 18 }; // where the header button would be
-    const atHeading: Pt = { x: h.x + h.width * 0.55, y: h.y + h.height / 2 };
+    // Measured on every frame: the side panel is still sliding open and resizing when the intro starts, so
+    // positions taken once at the start end up beside the cards instead of on them.
     const path = loop.current!;
-    path.setAttribute("d", circlePath(c));
-    const len = path.getTotalLength();
-    path.style.strokeDasharray = `${len + 1}`;
+    let box = scene.current!.getBoundingClientRect();
+    let start: Pt = { x: 0, y: 0 }, atHeading: Pt = { x: 0, y: 0 }, loopStart: Pt = { x: 0, y: 0 };
+    let len = 0, shape = "";
+    const measure = () => {
+      box = scene.current!.getBoundingClientRect();
+      const rel = (el: HTMLElement) => { const r = el.getBoundingClientRect(); return new DOMRect(r.x - box.x, r.y - box.y, r.width, r.height); };
+      const h = rel(heading.current!), c = rel(card.current!);
+      start = { x: box.width - 26, y: 18 }; // where the header button would be
+      atHeading = { x: h.x + h.width * 0.55, y: h.y + h.height / 2 };
+      const key = `${c.x.toFixed(0)},${c.y.toFixed(0)},${c.width.toFixed(0)},${c.height.toFixed(0)}`;
+      if (key !== shape) {
+        shape = key;
+        path.setAttribute("d", circlePath(c));
+        len = path.getTotalLength();
+        path.style.strokeDasharray = `${len + 1}`;
+        const p0 = path.getPointAtLength(0);
+        loopStart = { x: p0.x, y: p0.y };
+      }
+    };
+    measure();
     path.style.strokeDashoffset = `${len + 1}`;
-    const loopStart = path.getPointAtLength(0);
 
     const spark = (at: Pt, n: number, spread: number, size: number) => {
       const fills = ["#008080", "#4DB6AC", "#80CBC4", "#ffffff"];
@@ -85,8 +98,10 @@ export function Intro({ onDone }: { onDone: () => void }) {
     const t0 = performance.now();
     let raf = 0;
     const frame = (now: number) => {
+      measure();
       const s = (now - t0) / 1000;
       let p: Pt = start;
+      if (s < T.trace) path.style.strokeDashoffset = `${len + 1}`; // hidden until the trace (its length changes as the panel resizes)
       if (s < T.fly1) p = start;
       else if (s < T.point) p = arc(start, atHeading, -40, (s - T.fly1) / (T.point - T.fly1));
       else if (s < T.fly2) p = atHeading;
