@@ -1,0 +1,29 @@
+{
+  "page": {
+    "url": "https://ps1.aprimo.com/MarketingOps/", "title": "Classifications", "route": "#/management/classifications", "tenant": "ps1", "area": "marketing-ops",
+    "breadcrumbs": ["Administration", "Classifications"], "headings": ["Classifications"], "viewport": { "width": 1440, "height": 900 }, "truncated": 0,
+    "elements": [
+      { "id": "e1", "role": "button", "text": "Administration", "x": 20, "y": 14, "w": 130, "h": 32, "region": "toolbar" },
+      { "id": "e2", "role": "searchbox", "text": "Search classifications", "x": 260, "y": 90, "w": 320, "h": 34 },
+      { "id": "e3", "role": "button", "text": "New classification", "x": 1240, "y": 88, "w": 170, "h": 36 },
+      { "id": "e4", "role": "treeitem", "text": "Brand", "state": "collapsed", "x": 260, "y": 150, "w": 220, "h": 28 },
+      { "id": "e5", "role": "treeitem", "text": "Campaigns", "state": "collapsed", "x": 260, "y": 180, "w": 220, "h": 28 },
+      { "id": "e6", "role": "button", "text": "Export", "x": 1100, "y": 88, "w": 110, "h": 36, "disabled": true },
+      { "id": "e7", "role": "tab", "text": "Fields", "state": "selected", "x": 620, "y": 150, "w": 80, "h": 32 },
+      { "id": "e8", "role": "tab", "text": "Permissions", "x": 710, "y": 150, "w": 110, "h": 32 },
+      { "id": "e9", "role": "button", "text": "Save", "x": 1320, "y": 840, "w": 90, "h": 36 }
+    ]
+  },
+  "cases": [
+    { "q": "How do I create a classification?", "expect": { "topic": "screen", "point": ["e3"], "steps": true } },
+    { "q": "Where do I search for a classification?", "expect": { "topic": "screen", "point": ["e2"] } },
+    { "q": "How do I set who can see this classification?", "expect": { "topic": "screen", "point": ["e8"] } },
+    { "q": "Save my changes", "expect": { "topic": "screen", "point": ["e9"] } },
+    { "q": "Why can't I export?", "expect": { "topic": "screen", "point": ["e6"] } },
+    { "q": "Open the Brand classification", "expect": { "topic": "screen", "point": ["e4"] } },
+    { "q": "What's the capital of France?", "expect": { "topic": "other", "point": [] } },
+    { "q": "What is a content type in Aprimo?", "expect": { "topic": "other", "point": [] } },
+    { "q": "Who are you?", "expect": { "topic": "other", "point": [] } },
+    { "q": "Where is the delete all records button?", "expect": { "topic": "screen", "point": [] } }
+  ]
+}

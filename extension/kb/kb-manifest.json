@@ -1,0 +1,14 @@
+{
+  "model": "Xenova/all-MiniLM-L6-v2",
+  "dtype": "q8",
+  "dims": 384,
+  "count": 3106,
+  "docs": 409,
+  "builtAt": "2026-11-21T03:38:48.076Z",
+  "sources": [
+    "https://developers.aprimo.com/sitemap.xml",
+    "https://developers.aprimo.com/docs/openapi-specifications/dam-openapi-spec",
+    "urls",
+    "knowledge/files"
+  ]
+}

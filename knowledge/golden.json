@@ -1,0 +1,14 @@
+[
+  { "q": "How do I authenticate to the Aprimo API with OAuth?", "expect": "OAuth2" },
+  { "q": "What headers do I need to call the DAM REST API?", "expect": "rest-api" },
+  { "q": "How do I search for records with a search expression?", "expect": "search" },
+  { "q": "How do select headers work to expand related data?", "expect": "select-headers" },
+  { "q": "How do I upload a file to create a new record?", "expect": "upload" },
+  { "q": "What is the rate limit for the Aprimo API?", "expect": "rate-limit" },
+  { "q": "How do webhooks and rules work in Aprimo?", "expect": "webhook" },
+  { "q": "How do I connect the Aprimo MCP server?", "expect": "mcp" },
+  { "q": "How do I use the content selector?", "expect": "content-selector" },
+  { "q": "How do I create renditions or crops?", "expect": "rendition" },
+  { "q": "How do page hooks extend the Aprimo UI?", "expect": "extensibility" },
+  { "q": "How do I get analytics reports for asset engagement?", "expect": "report" }
+]

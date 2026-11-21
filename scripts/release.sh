@@ -14,6 +14,13 @@ if gh release view "$TAG" >/dev/null 2>&1; then echo "Release $TAG already exist
 OUT=$(mktemp -d)
 mkdir "$OUT/aprimo-builder-tools-extension"
 git archive HEAD extension | tar -x -C "$OUT/aprimo-builder-tools-extension" --strip-components=1
+# Aprimo Wisp's generated files are not committed: build them and add them to the zip.
+npm run -s build:tools
+npm run -s wisp:assets
+npm run -s kb:verify
+(cd extension && cp -R app/wisp/*.js app/wisp/chunks app/wisp/wisp.css "$OUT/aprimo-builder-tools-extension/app/wisp/" && cp content/wisp-agent.js "$OUT/aprimo-builder-tools-extension/content/" && cp -R vendor models "$OUT/aprimo-builder-tools-extension/")
+SIZE=$(du -sm "$OUT/aprimo-builder-tools-extension" | cut -f1)
+[ "$SIZE" -le 80 ] || echo "Warning: the extension is ${SIZE} MB."
 (cd "$OUT" && zip -qr "aprimo-builder-tools-extension-$TAG.zip" aprimo-builder-tools-extension)
 gh release create "$TAG" "$OUT/aprimo-builder-tools-extension-$TAG.zip" --title "Aprimo Builder Tools $TAG" --notes "$NOTES
 

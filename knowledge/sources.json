@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "note": "Sources built into the extension's knowledge index by `npm run kb:build`. The Aprimo help center needs an Aprimo sign-in, so it is indexed in the browser (Wisp settings > Knowledge > Index Aprimo Help), not here. Drop extra files (md, txt, html, pdf, vtt, srt, *.wisp.json knowledge packs) in knowledge/files/.",
+  "sources": [
+    { "id": "dev", "type": "sitemap", "url": "https://developers.aprimo.com/sitemap.xml", "include": ["^https://developers\\.aprimo\\.com/docs/"], "maxPages": 400 },
+    { "id": "dev", "type": "openapi-page", "url": "https://developers.aprimo.com/docs/openapi-specifications/dam-openapi-spec" },
+    { "id": "user", "type": "urls", "urls": [] },
+    { "id": "file", "type": "files", "dir": "knowledge/files" }
+  ]
+}

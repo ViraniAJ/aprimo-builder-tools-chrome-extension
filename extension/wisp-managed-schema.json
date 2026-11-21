@@ -1,0 +1,178 @@
+{
+  "type": "object",
+  "properties": {
+    "provider": {
+      "type": "string",
+      "enum": [
+        "nvidia-nim",
+        "openai-compatible",
+        "anthropic",
+        "local"
+      ]
+    },
+    "providers": {
+      "type": "object",
+      "properties": {
+        "nvidia-nim": {
+          "type": "object",
+          "properties": {
+            "baseURL": {
+              "type": "string"
+            },
+            "model": {
+              "type": "string"
+            },
+            "fallbacks": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "coordinateSpace": {
+              "type": "string",
+              "enum": [
+                "pixels",
+                "normalized1000",
+                "normalizedUnit"
+              ]
+            }
+          }
+        },
+        "openai-compatible": {
+          "type": "object",
+          "properties": {
+            "baseURL": {
+              "type": "string"
+            },
+            "model": {
+              "type": "string"
+            },
+            "fallbacks": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "coordinateSpace": {
+              "type": "string",
+              "enum": [
+                "pixels",
+                "normalized1000",
+                "normalizedUnit"
+              ]
+            }
+          }
+        },
+        "anthropic": {
+          "type": "object",
+          "properties": {
+            "baseURL": {
+              "type": "string"
+            },
+            "model": {
+              "type": "string"
+            },
+            "fallbacks": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "coordinateSpace": {
+              "type": "string",
+              "enum": [
+                "pixels",
+                "normalized1000",
+                "normalizedUnit"
+              ]
+            }
+          }
+        },
+        "local": {
+          "type": "object",
+          "properties": {
+            "baseURL": {
+              "type": "string"
+            },
+            "model": {
+              "type": "string"
+            },
+            "fallbacks": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "coordinateSpace": {
+              "type": "string",
+              "enum": [
+                "pixels",
+                "normalized1000",
+                "normalizedUnit"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "smartRouting": {
+      "type": "boolean"
+    },
+    "timeoutSeconds": {
+      "type": "integer"
+    },
+    "sendScreenshots": {
+      "type": "boolean"
+    },
+    "readPageControls": {
+      "type": "boolean"
+    },
+    "answerLength": {
+      "type": "string",
+      "enum": [
+        "short",
+        "normal",
+        "detailed"
+      ]
+    },
+    "instructions": {
+      "type": "string"
+    },
+    "guideSteps": {
+      "type": "boolean"
+    },
+    "allowWebActions": {
+      "type": "boolean"
+    },
+    "speak": {
+      "type": "boolean"
+    },
+    "voiceName": {
+      "type": "string"
+    },
+    "rate": {
+      "type": "number"
+    },
+    "volume": {
+      "type": "number"
+    },
+    "showCaptions": {
+      "type": "boolean"
+    },
+    "cursorTheme": {
+      "type": "string"
+    },
+    "cursorScale": {
+      "type": "number"
+    },
+    "autoLocalFallback": {
+      "type": "boolean"
+    },
+    "privacyAccepted": {
+      "type": "boolean"
+    },
+    "keepHistory": {
+      "type": "boolean"
+    }
+  }
+}

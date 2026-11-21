@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Allow the microphone · Aprimo Wisp</title>
+  <link rel="stylesheet" href="wisp.css">
+</head>
+<body>
+  <main style="max-width:520px;margin:12vh auto;padding:24px;text-align:center">
+    <h1 style="font-size:22px;font-weight:600">Let Aprimo Wisp hear you</h1>
+    <p style="color:var(--w-muted)">Chrome asks once. Wisp listens only while you hold the mic or after you press the shortcut.</p>
+    <p><button id="allow" style="background:var(--w-primary);color:#fff;border:0;border-radius:10px;padding:8px 16px;font-size:15px">Allow the microphone</button></p>
+    <p id="status" style="color:var(--w-muted)"></p>
+  </main>
+  <script type="module" src="mic-permission.js"></script>
+</body>
+</html>

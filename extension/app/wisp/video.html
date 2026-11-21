@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Recording · Aprimo Wisp</title>
+  <link rel="stylesheet" href="wisp.css">
+  <style>
+    .wrap{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:16px;padding:16px;height:100vh;box-sizing:border-box}
+    video{width:100%;max-height:calc(100vh - 80px);background:#000;border-radius:12px}
+    #side{overflow-y:auto;border:1px solid var(--w-border);border-radius:12px;padding:8px}
+    .row{display:flex;gap:8px;width:100%;text-align:left;border:0;background:none;color:inherit;padding:6px;border-radius:8px;font-size:13px}
+    .row:hover{background:var(--w-soft)} .ts{color:var(--w-muted);width:44px;flex-shrink:0;font-variant-numeric:tabular-nums}
+    @media (max-width:800px){.wrap{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div><h1 id="title" style="font-size:18px;font-weight:600;margin:0 0 8px">Loading…</h1><video id="video" controls></video></div>
+    <div id="side"></div>
+  </div>
+  <script type="module" src="video.js"></script>
+</body>
+</html>

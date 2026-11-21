@@ -95,3 +95,25 @@ const soon = () => { clearTimeout(timer); timer = setTimeout(forgetClosedSites, 
 chrome.tabs.onRemoved.addListener(soon);
 chrome.tabs.onUpdated.addListener((_id, change) => { if (change.url) soon(); });
 chrome.runtime.onStartup.addListener(soon);
+
+// ── Aprimo Wisp ─────────────────────────────────────────────────────────────
+// The shortcut (Alt+Shift+Space by default) opens the Wisp side panel and starts listening; pressed again while the
+// panel is open, it stops listening. A panel that is just opening picks the request up from session storage.
+chrome.commands.onCommand.addListener(async (command, tab) => {
+  if (command !== 'wisp-talk') return;
+  await chrome.storage.session.set({ 'wisp.talkAt': Date.now() });
+  try { await chrome.sidePanel.open({ windowId: tab?.windowId ?? (await chrome.windows.getCurrent()).id }); } catch (e) { console.warn('[wisp] side panel:', e); }
+  chrome.runtime.sendMessage({ kind: 'wisp-talk' }).catch(() => {});
+});
+
+// Timers and reminders set by asking Wisp ("remind me in 20 minutes to check the upload").
+chrome.alarms.onAlarm.addListener(async (alarm) => {
+  if (!alarm.name.startsWith('wisp-timer:')) return;
+  const id = alarm.name.slice(11);
+  const { 'wisp.timers': timers = [], 'wisp.settings': settings = {} } = await chrome.storage.local.get(['wisp.timers', 'wisp.settings']);
+  const t = timers.find((x) => x.id === id);
+  await chrome.storage.local.set({ 'wisp.timers': timers.filter((x) => x.id !== id), 'wisp.lastTimer': t || null });
+  const text = t?.label ? `Reminder: ${t.label}.` : "Time's up! Your timer is done.";
+  if (settings.speak !== false) chrome.tts.speak(text, { rate: settings.rate || 1, volume: settings.volume ?? 1, ...(settings.voiceName ? { voiceName: settings.voiceName } : {}) });
+  chrome.notifications.create(`wisp-${id}`, { type: 'basic', iconUrl: 'app/wisp/icon-128.png', title: t?.label ? 'Reminder' : 'Timer', message: text, priority: 2 });
+});

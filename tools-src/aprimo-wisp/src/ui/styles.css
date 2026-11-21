@@ -1,0 +1,53 @@
+@import "tailwindcss" source(none);
+@source "../";
+
+/* Aprimo Wisp palette. Light and dark follow the browser. */
+:root {
+  --w-bg: #ffffff;
+  --w-fg: #0f172a;
+  --w-card: #f8fafc;
+  --w-muted: #64748b;
+  --w-border: #e2e8f0;
+  --w-primary: #2b6bff;
+  --w-primary-fg: #ffffff;
+  --w-accent: #9be832;
+  --w-soft: #eef3ff;
+  --w-danger: #dc2626;
+  --w-ok: #16a34a;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --w-bg: #0b1120;
+    --w-fg: #e2e8f0;
+    --w-card: #111a2e;
+    --w-muted: #94a3b8;
+    --w-border: #1f2a44;
+    --w-primary: #4f86ff;
+    --w-soft: #13213f;
+  }
+}
+
+@theme inline {
+  --color-bg: var(--w-bg);
+  --color-fg: var(--w-fg);
+  --color-card: var(--w-card);
+  --color-muted: var(--w-muted);
+  --color-line: var(--w-border);
+  --color-primary: var(--w-primary);
+  --color-primary-fg: var(--w-primary-fg);
+  --color-accent: var(--w-accent);
+  --color-soft: var(--w-soft);
+  --color-danger: var(--w-danger);
+  --color-ok: var(--w-ok);
+}
+
+html, body { background: var(--w-bg); color: var(--w-fg); }
+body { font: 14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; margin: 0; }
+button { cursor: pointer; }
+button:disabled { cursor: default; opacity: .55; }
+input, select, textarea { font: inherit; color: inherit; }
+a { color: var(--w-primary); }
+.wisp-gradient { background: linear-gradient(135deg, var(--w-primary), var(--w-accent)); }
+@keyframes wisp-pulse { 0%,100% { transform: scale(1); opacity: 1 } 50% { transform: scale(1.12); opacity: .75 } }
+.wisp-pulse { animation: wisp-pulse 1.1s ease-in-out infinite; }

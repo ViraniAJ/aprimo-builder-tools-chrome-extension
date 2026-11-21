@@ -14,3 +14,12 @@ dist/
 
 # Parked work (Report Labs port drafts), kept on the local machine only
 labs/
+
+# Aprimo Wisp: generated at build time (npm run build:tools, npm run wisp:assets); release.sh adds them to the zip
+extension/app/wisp/*.js
+extension/app/wisp/chunks/
+extension/app/wisp/wisp.css
+extension/content/wisp-agent.js
+extension/vendor/
+extension/models/
+knowledge/.cache/
