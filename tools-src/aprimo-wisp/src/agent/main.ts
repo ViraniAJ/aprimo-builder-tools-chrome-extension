@@ -70,7 +70,11 @@ import { cleanSelection, describe, lastPointer, mask, snapshot } from "./snapsho
   // ── Guide watching (Wisp's GuideSession, one step at a time) ───────────────
   // Wisp waits for quiet (0.8 s after a click or key, 2 s after typing), then samples the screen until two samples
   // match. Here "the screen changed" means DOM mutations or a route change since the step was shown.
-  interface Watch { turn: string; target?: Target; label?: string; actions: GuideAction[]; clicked: boolean; used: boolean; baseRoute: string; muts: number; lastInput: number; quiet: number; timer?: ReturnType<typeof setTimeout>; idle?: ReturnType<typeof setTimeout> }
+  interface Watch { turn: string; target?: Target; label?: string; actions: GuideAction[]; clicked: boolean; used: boolean; baseRoute: string; muts: number; lastInput: number; quiet: number; timer?: ReturnType<typeof setTimeout>; idle?: ReturnType<typeof setTimeout>; entering?: boolean }
+  // A field to fill in: clicking into it starts the step; typing (then a pause), Enter/Tab, choosing or leaving it finishes it.
+  const EDITABLE = 'input:not([type=button]):not([type=submit]):not([type=checkbox]):not([type=radio]):not([type=reset]):not([type=file]),textarea,select,[contenteditable=""],[contenteditable=true],[role=textbox],[role=combobox],[role=searchbox],mat-select';
+  const editableOf = (el: Element | null) => el?.closest(EDITABLE) ?? null;
+  const TYPING_PAUSE_MS = 3000;
   let watch: Watch | null = null;
   const mo = new MutationObserver((records) => {
     if (!watch) return;
@@ -154,6 +158,7 @@ import { cleanSelection, describe, lastPointer, mask, snapshot } from "./snapsho
     if (watch.actions.length < 16) watch.actions.push(a);
     if (a.kind === "click-target") { watch.clicked = true; watch.used = true; }
     if (a.kind === "key") watch.used = true;
+    if (a.kind === "typing" && watch.entering) watch.used = true; // filling in the field they were shown
     watch.lastInput = Date.now();
     watch.quiet = quietMs;
     bumpIdle();
@@ -203,7 +208,15 @@ import { cleanSelection, describe, lastPointer, mask, snapshot } from "./snapsho
     if (watch) {
       const el = target?.closest("a,button,[role],input,select,textarea,mat-option,[data-automation-id]") ?? target;
       const label = el ? describe(el).text || describe(el).aria : undefined;
-      noteAction(near(watch.target, x, y, target) ? { kind: "click-target", label: watch.label ?? label } : { kind: "click-else", label }, 800);
+      const onTarget = near(watch.target, x, y, target);
+      if (onTarget && editableOf(target)) {
+        // Clicked into the field to fill in: that starts the step, it doesn't finish it. Wait for the typing.
+        if (watch.actions.length < 16) watch.actions.push({ kind: "click-target", label: watch.label ?? label });
+        watch.clicked = true;
+        watch.entering = true;
+        clearTimeout(watch.timer);
+        bumpIdle();
+      } else noteAction(onTarget ? { kind: "click-target", label: watch.label ?? label } : { kind: "click-else", label }, 800);
     }
     if (recording) recordClick(e);
   }
@@ -213,10 +226,11 @@ import { cleanSelection, describe, lastPointer, mask, snapshot } from "./snapsho
     if (e.key === "Escape" && (watch || plan.length)) { if (watch) endWatch("esc"); else stopPlan(); return; }
     if (!watch) return;
     const mod = e.ctrlKey || e.altKey || e.metaKey;
-    if (!mod && e.key.length === 1) { noteAction({ kind: "typing" }, 2000); return; }
+    const typingPause = watch.entering ? TYPING_PAUSE_MS : 2000;
+    if (!mod && e.key.length === 1) { noteAction({ kind: "typing" }, typingPause); return; }
     const named = e.key === "Enter" ? "Return" : e.key === "Tab" ? "Tab" : e.key.startsWith("Arrow") ? "an arrow key" : null;
     const name = named ?? `${e.ctrlKey ? "Control-" : ""}${e.altKey ? "Option-" : ""}${e.shiftKey ? "Shift-" : ""}${e.metaKey ? "Command-" : ""}${e.key.length === 1 ? e.key.toUpperCase() : "a key"}`;
-    if (!mod && !named) { noteAction({ kind: "typing" }, 2000); return; }
+    if (!mod && !named) { noteAction({ kind: "typing" }, typingPause); return; } // Backspace, Delete…
     noteAction({ kind: "key", name }, 800);
   }
   document.addEventListener("keydown", onKey, true);
@@ -250,6 +264,8 @@ import { cleanSelection, describe, lastPointer, mask, snapshot } from "./snapsho
     send({ kind: "wisp-event", op: "recorded-action", at: (Date.now() - recordStart) / 1000, route: location.hash, action: d.role === "input" ? "clicked into" : "clicked", target: d, title: document.title });
   }
   function onChange(e: Event) {
+    // Chose an option, or left a field after changing it: the field step is done.
+    if (watch?.entering) noteAction({ kind: "typing" }, 700);
     if (!recording) return;
     const el = e.target as Element;
     const d = describe(el);
