@@ -251,8 +251,18 @@ import { cleanSelection, describe, lastPointer, mask, snapshot } from "./snapsho
   const findHelp = (): Element | null =>
     document.querySelector('app-header-button[title="Help"]') ??
     [...document.querySelectorAll("header button, mat-toolbar button, [role=banner] button, app-header button")].find((b) => /^help$/i.test((b.getAttribute("aria-label") || b.getAttribute("title") || "").trim())) ?? null;
+  // Aprimo's header buttons sit on their icon font's baseline, which an SVG doesn't share (on ps1 ours sat 1px
+  // low), so line its top up with Help's after it's placed, and again whenever the header changes.
+  function alignButton() {
+    const wrap = document.getElementById(BUTTON_ID) as HTMLElement | null;
+    const help = findHelp();
+    if (!wrap || !help) return;
+    const now = parseFloat(wrap.style.top) || 0;
+    const dy = help.getBoundingClientRect().top - (wrap.getBoundingClientRect().top - now);
+    if (Math.abs(dy - now) >= 0.5) { wrap.style.position = "relative"; wrap.style.top = `${dy}px`; }
+  }
   function placeButton() {
-    if (document.getElementById(BUTTON_ID)) return;
+    if (document.getElementById(BUTTON_ID)) { alignButton(); return; }
     const help = findHelp();
     if (!help?.parentElement) return;
     // Aprimo's header styles its buttons through the wrapper element (Angular's _ngcontent/_nghost attributes and
@@ -289,6 +299,7 @@ import { cleanSelection, describe, lastPointer, mask, snapshot } from "./snapsho
     });
     wrap.appendChild(b);
     help.parentElement.insertBefore(wrap, help);
+    alignButton();
   }
   placeButton();
   setInterval(placeButton, 1500);

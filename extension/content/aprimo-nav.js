@@ -137,10 +137,25 @@
     saved = null;
   }
 
+  // Tools live on the admin home address, so Aprimo marks "Administration Home" as selected too; while a tool is
+  // open, only the tool's own menu item should look selected.
+  const HOME_STYLE_ID = 'arm-home-unselect';
+  function markToolOpen(open) {
+    if (!document.getElementById(HOME_STYLE_ID)) {
+      const st = document.createElement('style');
+      st.id = HOME_STYLE_ID;
+      st.textContent = 'html.arm-tool-open button[data-automation-id="administration-home-button"].selected{background-color:transparent!important;color:rgba(0,0,0,.87)!important}'
+        + 'html.arm-tool-open button[data-automation-id="administration-home-button"].selected *{color:rgba(0,0,0,.87)!important}';
+      document.head.appendChild(st);
+    }
+    document.documentElement.classList.toggle('arm-tool-open', open);
+  }
+
   // ── Content pane ───────────────────────────────────────────────────────────
   function sync() {
     const panel = buildSection();
     const tool = currentTool();
+    markToolOpen(!!tool);
     for (const t of TOOLS) {
       const a = document.querySelector(`a[data-automation-id="arm-${t.id}-left"]`);
       a?.classList.toggle('selected', tool === t);
@@ -154,7 +169,7 @@
         panel.__armSetOpen?.(true);
         panel.__armShownFor = tool.id;
         const item = panel.querySelector(`a[data-automation-id="arm-${tool.id}-left"]`);
-        setTimeout(() => item?.scrollIntoView({ block: 'nearest' }), 250); // after the expand animation
+        setTimeout(() => item?.scrollIntoView({ block: 'center' }), 250); // after the expand animation
       }
       setHeader(tool);
       if (main) {
