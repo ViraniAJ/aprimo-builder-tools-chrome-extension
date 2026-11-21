@@ -32,7 +32,7 @@ if (want('wisp')) {
   const tsconfig = path.join(root, 'tools-src/aprimo-wisp/tsconfig.json');
   rmSync(path.join(out, 'chunks'), { recursive: true, force: true });
   // Pages are ES modules split into shared chunks, so WebLLM and the PDF reader load only when used.
-  const pages = { panel: 'panel/main.tsx', settings: 'settings/main.tsx', 'mic-permission': 'pages/mic-permission.ts', video: 'pages/video.ts' };
+  const pages = { panel: 'panel/main.tsx', bar: 'panel/bar.tsx', settings: 'settings/main.tsx', 'mic-permission': 'pages/mic-permission.ts', video: 'pages/video.ts' };
   // Workers are ES modules: transformers.js and ONNX Runtime import their wasm glue at run time.
   const worker = (entry, file) => ({ ...common, tsconfig, format: 'esm', entryPoints: [path.join(src, entry)], outfile: path.join(out, file) });
   await Promise.all([

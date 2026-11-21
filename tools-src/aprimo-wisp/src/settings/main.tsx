@@ -86,7 +86,10 @@ function General({ s, update, locked, replay }: TabProps & { replay: () => void 
   return (
     <>
       <Section title="Asking">
-        <p className="mb-2 text-sm">Open the panel and hold the mic, or press <kbd className="rounded border border-line px-1">Alt</kbd>+<kbd className="rounded border border-line px-1">Shift</kbd>+<kbd className="rounded border border-line px-1">Space</kbd> to start and again to stop. You can change the keys at <code>chrome://extensions/shortcuts</code>.</p>
+        <Field label="Where Wspr opens" help="On Aprimo pages. Teach (recording a feature) always uses the side panel.">
+          <Segmented value={s.surface} disabled={locked("surface")} onChange={(v) => update({ surface: v })} options={[{ value: "bar", label: "On the page" }, { value: "panel", label: "Side panel" }]} />
+        </Field>
+        <p className="mb-2 text-sm">Click the Wspr cursor next to Help and hold the mic, or press <kbd className="rounded border border-line px-1">Alt</kbd>+<kbd className="rounded border border-line px-1">Shift</kbd>+<kbd className="rounded border border-line px-1">Space</kbd> to start and again to stop. You can change the keys at <code>chrome://extensions/shortcuts</code>.</p>
         <Toggle checked={s.guideSteps} locked={locked("guideSteps")} onChange={(v) => update({ guideSteps: v })} label="Guide me step by step" help="After a how-to answer, click where Wspr points and it shows the next step." />
         <Toggle checked={s.allowWebActions} locked={locked("allowWebActions")} onChange={(v) => update({ allowWebActions: v })} label="Let Wspr open websites for you" help="Light help only: open a site or search the web or a site in a new tab. Wspr never clicks or types in Aprimo." />
         <Toggle checked={s.readPageControls} locked={locked("readPageControls")} onChange={(v) => update({ readPageControls: v })} label="Better answers" help="Send the page's list of controls (names, positions, state) with each question. Wspr points far more accurately." />

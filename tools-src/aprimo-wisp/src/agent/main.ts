@@ -4,6 +4,7 @@
 import type { GuideAction } from "../core/guide";
 import type { Target } from "../core/reply-parser";
 import type { AgentEvent, AgentRequest, DrawCommand, PlanStep } from "../shared/messages";
+import { barForShot, showBar } from "./bar";
 import { Overlay } from "./overlay";
 import { findByDescriptor, rectOf, resolve, type Known } from "./resolve";
 import { cleanSelection, describe, lastPointer, mask, snapshot } from "./snapshot";
@@ -274,6 +275,14 @@ import { cleanSelection, describe, lastPointer, mask, snapshot } from "./snapsho
       case "record-start": hookFrames(); recording = true; recordStart = Date.now(); ov().setCaption("Wspr is recording your clicks…", true); sendResponse({ ok: true, title: document.title, route: location.hash }); return;
       case "record-stop": recording = false; ov().setCaption(""); sendResponse({ ok: true }); return;
       case "navigate": if (/^#\//.test(msg.route)) location.hash = msg.route; sendResponse({ ok: true }); return;
+      case "bar": showBar(!!msg.talk); sendResponse({ ok: true }); return;
+      case "bar-shot": {
+        const hid = barForShot(msg.hide);
+        // Let the page repaint without the bar before the screenshot is taken.
+        if (hid && msg.hide) { requestAnimationFrame(() => requestAnimationFrame(() => sendResponse({ hid }))); return true; }
+        sendResponse({ hid });
+        return;
+      }
     }
   });
 
@@ -285,7 +294,9 @@ import { cleanSelection, describe, lastPointer, mask, snapshot } from "./snapsho
     overlay?.setLook(defined);
     if (s.keepOnScreen) ov(); // the companion waits beside the pointer
   };
-  chrome.storage.local.get("wisp.settings").then((r) => applyLook(r["wisp.settings"] ?? {})).catch(() => {});
+  let surface: "bar" | "panel" = "bar";
+  chrome.storage.local.get("wisp.settings").then((r) => { applyLook(r["wisp.settings"] ?? {}); surface = r["wisp.settings"]?.surface === "panel" ? "panel" : "bar"; }).catch(() => {});
+  chrome.storage.onChanged.addListener((c, area) => { if (area === "local" && c["wisp.settings"]) surface = c["wisp.settings"].newValue?.surface === "panel" ? "panel" : "bar"; });
   chrome.storage.onChanged.addListener((changes, area) => { if (area === "local" && changes["wisp.settings"]) applyLook(changes["wisp.settings"].newValue ?? {}); });
 
   // ── A Wisp button in Aprimo's top bar, next to Help ────────────────────────
@@ -335,8 +346,9 @@ import { cleanSelection, describe, lastPointer, mask, snapshot } from "./snapsho
       // plays in the panel itself.
       const r = b.getBoundingClientRect();
       const from = { x: r.x + r.width / 2, y: r.y + r.height / 2 };
-      const sent = chrome.runtime.sendMessage({ kind: "wisp-open", talk: true });
       ov().sparkle(from, 8, 30, 10);
+      if (surface === "bar") { showBar(true); return; }
+      const sent = chrome.runtime.sendMessage({ kind: "wisp-open", talk: true });
       sent.then((res) => {
         if (!res?.ok) ov().setCaption("Press Alt+Shift+Space to open Aprimo Wspr.");
       }).catch(() => ov().setCaption("Press Alt+Shift+Space to open Aprimo Wspr."));
@@ -347,6 +359,9 @@ import { cleanSelection, describe, lastPointer, mask, snapshot } from "./snapsho
   }
   placeButton();
   setInterval(() => { placeButton(); hookFrames(); }, 1500);
+
+  // A walkthrough was running in this tab before the page reloaded: bring the bar back so it can carry on.
+  chrome.runtime.sendMessage({ kind: "wisp-bar-resume" }).then((r) => { if (r?.show) showBar(false); }).catch(() => {});
 
   // Expose for tests in the fake-aprimo harness.
   (window as any).__aprimoWispDebug = { snapshot, findByDescriptor };

@@ -6,6 +6,9 @@ It is a browser reimplementation of [Wisp](https://github.com/ZakVir/wisp), a na
 
 ## Using it
 
+- **Where it opens** (Settings › General › Where Wspr opens):
+  - **On the page** (default): a small bar at the bottom of the Aprimo page, like Siri. It glows while listening and thinking, shows what it heard and then the answer, keeps Next / Stop while a walkthrough watches, and tucks itself away after 15 quiet seconds. Earlier answers, New chat, Settings and Teach are in its buttons.
+  - **Side panel:** Chrome's side panel, as before. Teach always uses the side panel.
 - **Open:**
   - Press **Alt+Shift+Space**. It opens the side panel and starts listening; press it again to stop. You can change the keys at `chrome://extensions/shortcuts`.
   - Or open **Administration › External Builder Tools › Aprimo Wspr Settings** and click **Open Wspr panel**.

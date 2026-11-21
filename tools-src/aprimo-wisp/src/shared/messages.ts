@@ -29,7 +29,9 @@ export type AgentRequest =
   | { kind: "wisp"; op: "page-text"; max?: number }
   | { kind: "wisp"; op: "record-start" }
   | { kind: "wisp"; op: "record-stop" }
-  | { kind: "wisp"; op: "navigate"; route: string };
+  | { kind: "wisp"; op: "navigate"; route: string }
+  | { kind: "wisp"; op: "bar"; talk?: boolean } // show the on-page bar (and start listening)
+  | { kind: "wisp"; op: "bar-shot"; hide: boolean }; // hide the bar while a screenshot is taken
 
 export type AgentEvent =
   | { kind: "wisp-event"; op: "step-advanced"; turn: string; index: number }

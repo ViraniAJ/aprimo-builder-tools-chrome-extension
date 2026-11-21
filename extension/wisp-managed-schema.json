@@ -141,6 +141,10 @@
     "guideSteps": {
       "type": "boolean"
     },
+    "surface": {
+      "type": "string",
+      "enum": ["bar", "panel"]
+    },
     "allowWebActions": {
       "type": "boolean"
     },

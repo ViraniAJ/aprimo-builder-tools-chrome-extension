@@ -99,8 +99,20 @@ chrome.runtime.onStartup.addListener(soon);
 // ── Aprimo Wisp ─────────────────────────────────────────────────────────────
 // The shortcut (Alt+Shift+Space by default) opens the Wisp side panel and starts listening; pressed again while the
 // panel is open, it stops listening. A panel that is just opening picks the request up from session storage.
+// Where Wspr opens on Aprimo pages ("bar": a bar at the bottom of the page, the default; "panel": the side panel).
+// Kept in memory so the shortcut can decide without waiting (opening the side panel must happen straight away).
+let wispSurface = 'bar';
+chrome.storage.local.get('wisp.settings').then((r) => { wispSurface = r['wisp.settings']?.surface === 'panel' ? 'panel' : 'bar'; }).catch(() => {});
+chrome.storage.onChanged.addListener((c, area) => { if (area === 'local' && c['wisp.settings']) wispSurface = c['wisp.settings'].newValue?.surface === 'panel' ? 'panel' : 'bar'; });
+const isAprimoShellUrl = (u) => /^https:\/\/[^/]+\.aprimo\.com\//i.test(u || '');
+
 chrome.commands.onCommand.addListener(async (command, tab) => {
   if (command !== 'wisp-talk') return;
+  // On an Aprimo page with the bar chosen: show the bar there (it starts listening). Elsewhere, the side panel.
+  if (wispSurface === 'bar' && tab?.id && isAprimoShellUrl(tab.url)) {
+    const shown = await chrome.tabs.sendMessage(tab.id, { kind: 'wisp', op: 'bar', talk: true }).catch(() => null);
+    if (shown?.ok) return;
+  }
   await chrome.storage.session.set({ 'wisp.talkAt': Date.now() });
   try { await chrome.sidePanel.open({ windowId: tab?.windowId ?? (await chrome.windows.getCurrent()).id }); } catch (e) { console.warn('[wisp] side panel:', e); }
   chrome.runtime.sendMessage({ kind: 'wisp-talk' }).catch(() => {});
@@ -115,6 +127,16 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   chrome.sidePanel.open({ windowId })
     .then(() => { chrome.runtime.sendMessage({ kind: 'wisp-talk' }).catch(() => {}); sendResponse({ ok: true }); })
     .catch((e) => { console.warn('[wisp] side panel:', e); sendResponse({ ok: false }); });
+  return true;
+});
+
+// The page asks after loading: was a walkthrough running in this tab (so the bar should come back and carry on)?
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (msg?.kind !== 'wisp-bar-resume' || !sender.tab) return;
+  chrome.storage.session.get('wisp.guide').then((r) => {
+    const g = r['wisp.guide'];
+    sendResponse({ show: wispSurface === 'bar' && !!g && g.tabId === sender.tab.id && Date.now() - (g.at || 0) < 300000 });
+  }).catch(() => sendResponse({ show: false }));
   return true;
 });
 

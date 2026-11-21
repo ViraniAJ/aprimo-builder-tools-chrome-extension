@@ -53,6 +53,9 @@ export interface TurnUI {
 export const isAprimoUrl = (url?: string) => !!url && /^https:\/\/[^/]+\.aprimo\.com\//i.test(url);
 
 export async function activeTab(): Promise<chrome.tabs.Tab | undefined> {
+  // The on-page bar runs inside the Aprimo tab itself: that tab is the one to look at and point in.
+  const own = await chrome.tabs.getCurrent?.().catch(() => undefined);
+  if (own?.id) return own;
   const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
   return tab;
 }
@@ -79,6 +82,13 @@ async function pageFacts(tab: chrome.tabs.Tab): Promise<PageFacts | null> {
 }
 
 export async function screenshot(tab: chrome.tabs.Tab, maxWidth = 1456): Promise<{ img: ChatImage; width: number; height: number; dataUrl: string } | null> {
+  // Keep Wspr's own bar out of the picture (the AI would otherwise read it as part of the page).
+  const hidden = tab.id ? await toTab(tab.id, { kind: "wisp", op: "bar-shot", hide: true }).catch(() => null) : null;
+  try { return await capture(tab, maxWidth); }
+  finally { if (hidden?.hid && tab.id) toTab(tab.id, { kind: "wisp", op: "bar-shot", hide: false }).catch(() => {}); }
+}
+
+async function capture(tab: chrome.tabs.Tab, maxWidth: number): Promise<{ img: ChatImage; width: number; height: number; dataUrl: string } | null> {
   try {
     const dataUrl = await chrome.tabs.captureVisibleTab(tab.windowId!, { format: "jpeg", quality: 72 });
     const bmp = await createImageBitmap(await (await fetch(dataUrl)).blob());

@@ -18,6 +18,7 @@ export interface WispSettings {
   answerLength: AnswerLength;
   instructions: string; // max 500 characters
   guideSteps: boolean; // "Guide me step by step"
+  surface: "bar" | "panel"; // where Wspr opens on Aprimo pages: a bar at the bottom of the page, or Chrome's side panel
   allowWebActions: boolean; // "Let Wisp open websites for you"
   answerCard: boolean; // show answers in the panel (always on in the panel; kept for parity of exported files)
   // speech
@@ -62,6 +63,7 @@ export function defaultSettings(): WispSettings {
     answerLength: "normal",
     instructions: "",
     guideSteps: true,
+    surface: "bar",
     allowWebActions: true,
     answerCard: true,
     speak: true,
