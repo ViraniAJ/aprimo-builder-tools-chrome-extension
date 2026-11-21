@@ -26,6 +26,8 @@ export interface TurnResult {
   steps: StepView[];
   stepsMore?: boolean; // Wisp's STEPS: more | done (undefined when absent)
   pointed: boolean;
+  /** Why the cursor didn't move (or moved somewhere unexpected), shown under Details. */
+  pointNotes?: string[];
   firstTarget?: Target;
   firstLabel?: string;
   notes: KnowledgeNote[];
@@ -62,13 +64,13 @@ export async function toTab(tabId: number, msg: AgentRequest): Promise<any> {
 async function pageFacts(tab: chrome.tabs.Tab): Promise<PageFacts | null> {
   if (!tab.id || !isAprimoUrl(tab.url)) return null;
   try {
-    const r = await toTab(tab.id, { kind: "wisp", op: "snapshot", max: 150 });
+    const r = await toTab(tab.id, { kind: "wisp", op: "snapshot", max: 220 });
     return r?.facts ?? null;
   } catch {
     // The agent starts with the page; a tab opened before the extension was installed needs one reload.
     try {
       await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ["content/wisp-agent.js"] });
-      const r = await toTab(tab.id, { kind: "wisp", op: "snapshot", max: 150 });
+      const r = await toTab(tab.id, { kind: "wisp", op: "snapshot", max: 220 });
       return r?.facts ?? null;
     } catch {
       return null;
@@ -206,17 +208,26 @@ export async function runTurn(o: TurnOptions): Promise<TurnResult> {
     };
 
     /** Wisp's VisualDecision for one visual event; returns the target to draw (viewport), or null. */
+    const why = (note: string) => { result.pointNotes = [...new Set([...(result.pointNotes ?? []), note])]; };
+    let visuals = 0;
     const decide = (ev: ReplyEvent, label?: string): { target?: Target; el?: PageElement } | null => {
-      if (!pointing || !onAprimo) return null;
+      visuals++;
+      if (!onAprimo) { why("Not pointed: the tab in front isn't an Aprimo page."); return null; }
+      if (!pointing) { why("Not pointed: the question was small talk or about Wspr itself."); return null; }
       if (isDrawRequest(o.question)) return {};
       const sentence = lastSentence || sayParts[sayParts.length - 1] || "";
-      if (deniesPresence(sentence) || asksBack(sentence)) return null;
+      if (deniesPresence(sentence)) { why("Not pointed: the answer said the thing isn't on the page."); return null; }
+      if (asksBack(sentence)) { why("Not pointed: the answer asked a question back."); return null; }
       const a = anchorOf(ev);
       const anchor = a && a.kind !== "element" ? toVp(a) : null;
       const anchorPt = anchor ? (anchor.kind === "rect" ? { x: anchor.x + anchor.w / 2, y: anchor.y + anchor.h / 2 } : anchor.kind === "point" ? anchor : null) : null;
       const byId = a?.kind === "element" ? page?.elements.find((e) => e.id === a.id) ?? null : null;
+      if (a?.kind === "element" && !byId) why(`The AI pointed at ${a.id}, which isn't in this page's control list${label ? `; matched by its label "${label}" instead` : ""}.`);
       const el = byId ?? matchControl(label, anchorPt, page);
-      if (result.topic === "other" && !(label && sentenceNames(label, sentence) && el)) return null;
+      if (a?.kind === "element" && !byId && !el) { why(`Not pointed: no control on the page matches "${label ?? a.id}".`); return null; }
+      // TOPIC: other keeps a visual only when it's clearly about a real control: one the AI named by id from the
+      // control list, or one the sentence names.
+      if (result.topic === "other" && !(el && (byId || (label && sentenceNames(label, sentence))))) { why("Not pointed: the AI answered it as a general question (TOPIC: other), not about this page."); return null; }
       return { el: el ?? undefined, target: el ? { kind: "element", id: el.id } : undefined };
     };
     const noteGreyed = (el?: PageElement, label?: string) => {
@@ -307,6 +318,7 @@ export async function runTurn(o: TurnOptions): Promise<TurnResult> {
     }
     for (const ev of parser.end()) handle(ev);
     speakNew(result.say, true);
+    if (!visuals && onAprimo && pointing && result.topic !== "other") why(page ? "Not pointed: the AI's reply had no POINT or CIRCLE line." : "Not pointed: Wspr couldn't read this page's controls (try refreshing the tab).");
 
     if (greyedNote) { sayParts.push(greyedNote); result.say = sayParts.join(" "); say(greyedNote); }
     // Visuals but no speech: "Here." / "Here: {label}."

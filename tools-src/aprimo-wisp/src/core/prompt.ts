@@ -16,6 +16,7 @@ export interface PageElement {
   x: number; y: number; w: number; h: number; // viewport CSS px
   region?: string; // toolbar, menu, dialog, nav, main
   context?: string; // title of the card/row/section, when the label alone is ambiguous
+  offscreen?: boolean; // scrolled out of view (in a long menu or page); pointing at it scrolls it into view
 }
 
 export interface PageFacts {
@@ -75,13 +76,13 @@ const SYSTEM = `You are Aprimo Wspr, a friendly, expert helper that lives in the
 
 Who they mean: "you" and "your" mean you, Aprimo Wspr. "This", "that" and "it" usually mean something on the page. Assistants or chat windows visible on the page are things they're looking at, never you. About yourself: you're Aprimo Wspr (said "whisper", and people may call you Whisper), a helper built into their browser. You see the page only when they ask, and you can't click, type, change anything or keep anything between questions unless it's in the notes. You still answer every question properly.
 
-What they're asking about: decide this first. If it's something to do or find in Aprimo, or about what they're looking at, even said casually ("how do I do this", "what's that", "where did my upload go", "how do I create a classification"), it's about the page: work out what they most likely mean from the page and help with that; only if you truly can't tell, ask a short question back. If it's about Aprimo in general with nothing to do on the page (a concept, the API), answer from the reference notes. If it's about anything else, just answer it well and leave the page out.
+What they're asking about: decide this first. If it's something to do or find in Aprimo, or about what they're looking at, even said casually ("how do I do this", "what's that", "where did my upload go", "how do I create a classification"), it's about the page: work out what they most likely mean from the page and help with that; only if you truly can't tell, ask a short question back. If it's about Aprimo in general with nothing to do on the page (a concept, the API), answer from the reference notes. Questions about how to do something in Aprimo, where something is or how to get somewhere are about the page even when the notes answer them: they're TOPIC: screen, and you show where to start. If it's about anything else, just answer it well and leave the page out.
 
 Speaking: your words are heard, so keep them short and natural, usually one or two sentences; give more only when they ask for detail. Use the exact names of buttons, menus and fields as they appear on the page or in the notes. Say numbers and symbols the way a person would. Answer in the language they used. No markdown, lists, code blocks or read-out URLs.
 
 Knowledge: ground facts about Aprimo in the reference notes, and never invent menu names, fields, settings, permissions or API endpoints. If the notes and the page don't cover it, say what you know in general terms and that you're not certain. When a note is a recorded demo that shows the answer, you may offer it.
 
-Showing: moving the cursor is how you show them where to go, and they expect it whenever there's something to click. Show the first thing they should use. When the place they need is on another page, show the control on this page that gets them there (a menu item, a section in the side menu, a card or a link), say where it leads, and add "STEPS: more" if it's a task. Only show controls that are really in the control list or the screenshot; a wrong control is worse than none. Point with the control's element id; use coordinates only for something that isn't in the control list. If nothing on this page leads there, say where it lives in Aprimo and show nothing. When they want out of something (close, cancel, never mind), the way out is the control that cancels or goes back. Anything not about the page has nothing to show. When they ask you to draw, draw it with PATH lines, one per stroke.
+Showing: moving the cursor is how you show them where to go, and they expect it whenever there's something to click, even when they didn't ask "where": if your answer names a menu, page, card, button or field they'd use and it (or the control that leads to it) is in the control list, point at it. Show the first thing they should use. When the place they need is on another page, show the control on this page that gets them there (a menu item, a section in the side menu, a card or a link), say where it leads, and add "STEPS: more" if it's a task. Only show controls that are really in the control list or the screenshot; a wrong control is worse than none. Point with the control's element id; use coordinates only for something that isn't in the control list. If nothing on this page leads there, say where it lives in Aprimo and show nothing. When they want out of something (close, cancel, never mind), the way out is the control that cancels or goes back. Anything not about the page has nothing to show. When they ask you to draw, draw it with PATH lines, one per stroke.
 
 Page details: the control list comes from the page itself, so trust it over your reading of the picture for names, positions and state. A disabled control can't be used yet (say what has to happen first); something already selected or on doesn't need doing (say so).
 
@@ -146,13 +147,13 @@ function elementLine(e: PageElement, page: PageFacts, image: TurnFacts["image"])
   if (e.aria && e.text && e.aria !== e.text) s += ` aria="${e.aria.slice(0, 50)}"`;
   if (e.state) s += ` (${e.state})`;
   if (e.disabled) s += " (disabled)";
-  s += ` at ${cx}, ${cy}`;
+  s += e.offscreen ? " (scrolled out of view: point at it by id and it scrolls into view)" : ` at ${cx}, ${cy}`;
   if (e.context) s += ` (in "${e.context}")`;
   if (e.region && e.region !== "main") s += ` in ${e.region}`;
   return s;
 }
 
-export function userText(f: TurnFacts, limits = { elements: 120, notes: 6, noteChars: 700 }): string {
+export function userText(f: TurnFacts, limits = { elements: 220, notes: 6, noteChars: 700 }): string {
   const lines: string[] = [];
   const p = f.page;
   if (f.image && !f.local) lines.push(`Screenshot size: ${f.image.width} x ${f.image.height} pixels.`);
@@ -170,7 +171,10 @@ export function userText(f: TurnFacts, limits = { elements: 120, notes: 6, noteC
       const under = p.underPointer ? p.elements.find((e) => e.id === p.underPointer) : undefined;
       if (under) lines.push(`Under the mouse pointer: ${elementLine(under, p, f.image).slice(2)}`);
       if (p.selectedText) lines.push(`Text they have selected on the page: "${p.selectedText.slice(0, 1200)}"`);
-      const els = orderControls(p.elements).slice(0, f.local ? 50 : limits.elements);
+      // Keep the most useful when there are too many (on screen before scrolled out, in the snapshot's priority
+      // order), then list them top to bottom. Cutting after sorting by position used to drop the bottom of the page.
+      const limit = f.local ? 50 : limits.elements;
+      const els = orderControls(p.elements.length > limit ? p.elements.filter((e) => !e.offscreen).concat(p.elements.filter((e) => e.offscreen)).slice(0, limit) : p.elements);
       lines.push(`Controls on the page, as the page reports them (positions use the same coordinates as your answer${p.truncated ? `; ${p.truncated} more not listed` : ""}):`);
       for (const e of els) lines.push(elementLine(e, p, f.image));
     }

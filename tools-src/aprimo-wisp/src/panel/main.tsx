@@ -264,6 +264,7 @@ function Entry({ e }: { e: ChatEntry }) {
           <details className="mt-1.5 text-[11px] text-muted">
             <summary className="cursor-pointer select-none">Details</summary>
             <div className="mt-1">Topic: {r.topic || "–"} · Pointed: {r.pointed ? `yes${r.firstLabel ? ` (${r.firstLabel})` : ""}` : "no"}{r.stepsMore !== undefined ? ` · Steps: ${r.stepsMore ? "more" : "done"}` : ""}{r.pageTitle ? ` · Page: ${r.pageTitle}` : " · Not on an Aprimo page"}{r.shot ? " · Screenshot sent" : " · No screenshot"}</div>
+            {r.pointNotes?.map((n) => <div key={n} className="mt-0.5 text-[#b26a00]">{n}</div>)}
             <pre className="mt-1 max-h-48 overflow-auto whitespace-pre-wrap rounded bg-page p-2 font-mono text-[11px] text-fg">{r.raw || "(empty reply)"}</pre>
           </details>
         )}

@@ -84,12 +84,21 @@ export function describe(el: Element): Descriptor {
   };
 }
 
-function visible(el: Element, rect: DOMRect, vw: number, vh: number): boolean {
-  if (rect.width < 4 || rect.height < 4) return false;
-  if (rect.bottom < 0 || rect.right < 0 || rect.top > vh || rect.left > vw) return false;
+/** "on" in view, "scrolled" only hidden by scrolling (a long menu or page), or null when not shown at all. */
+function visibility(el: Element, rect: DOMRect, vw: number, vh: number): "on" | "scrolled" | null {
+  if (rect.width < 4 || rect.height < 4) return null;
   const st = getComputedStyle(el);
-  if (st.visibility === "hidden" || st.display === "none" || Number(st.opacity) < 0.05) return false;
-  return !el.closest("[aria-hidden=true], [hidden], .cdk-visually-hidden");
+  if (st.visibility === "hidden" || st.display === "none" || Number(st.opacity) < 0.05) return null;
+  if (el.closest("[aria-hidden=true], [hidden], .cdk-visually-hidden")) return null;
+  if (!(rect.bottom < 0 || rect.right < 0 || rect.top > vh || rect.left > vw)) return "on";
+  // Above or below the view but horizontally on screen, inside something that scrolls: pointing scrolls it in.
+  if (rect.right < 0 || rect.left > vw) return null;
+  for (let p = el.parentElement; p && p !== document.documentElement; p = p.parentElement) {
+    const o = getComputedStyle(p).overflowY;
+    if ((o === "auto" || o === "scroll" || o === "overlay") && p.scrollHeight > p.clientHeight + 4) return "scrolled";
+  }
+  const doc = document.scrollingElement;
+  return doc && doc.scrollHeight > vh + 4 ? "scrolled" : null;
 }
 
 function regionOf(el: Element): string | undefined {
@@ -129,15 +138,19 @@ export const lastPointer = () => pointer;
 
 export interface Snapshot { facts: PageFacts; byId: Map<string, { el: WeakRef<Element>; desc: Descriptor; frame: Element | null }> }
 
-export function snapshot(max = 150): Snapshot {
+/** How many scrolled-out controls are listed at most (on-screen ones always come first). */
+const MAX_SCROLLED = 60;
+
+export function snapshot(max = 220): Snapshot {
   const vw = innerWidth, vh = innerHeight;
-  const candidates: { el: Element; rect: DOMRect; frame: Element | null; score: number }[] = [];
+  const candidates: { el: Element; rect: DOMRect; frame: Element | null; score: number; scrolled: boolean }[] = [];
   const visit = (doc: Document, frame: Element | null, ox: number, oy: number) => {
     for (const el of doc.querySelectorAll(INTERACTIVE)) {
       if (el.closest("#aprimo-wisp-overlay-host")) continue;
       const r0 = el.getBoundingClientRect();
       const rect = new DOMRect(r0.x + ox, r0.y + oy, r0.width, r0.height);
-      if (!visible(el, rect, vw, vh)) continue;
+      const vis = visibility(el, rect, vw, vh);
+      if (!vis) continue;
       // Skip elements fully nested inside another candidate with the same text (wrapper spans etc.).
       const text = labelOf(el);
       const aria = el.getAttribute("aria-label");
@@ -146,7 +159,8 @@ export function snapshot(max = 150): Snapshot {
       if (el.getAttribute("data-automation-id")) score += 2;
       if (regionOf(el) === "dialog") score += 3;
       if (text.length > 1 && text.length < 40) score += 1;
-      candidates.push({ el, rect, frame, score });
+      if (vis === "scrolled") score -= 10; // after everything on screen
+      candidates.push({ el, rect, frame, score, scrolled: vis === "scrolled" });
     }
     for (const f of doc.querySelectorAll("iframe")) {
       try {
@@ -163,7 +177,9 @@ export function snapshot(max = 150): Snapshot {
   const set = new Set(candidates.map((c) => c.el));
   const kept = candidates.filter((c) => ![...set].some((o) => o !== c.el && c.el.contains(o) && labelOf(o) === labelOf(c.el)));
   kept.sort((a, b) => b.score - a.score || a.rect.y - b.rect.y || a.rect.x - b.rect.x);
-  const chosen = kept.slice(0, max).sort((a, b) => a.rect.y - b.rect.y || a.rect.x - b.rect.x);
+  let scrolledCount = 0;
+  const capped = kept.filter((c) => !c.scrolled || ++scrolledCount <= MAX_SCROLLED);
+  const chosen = capped.slice(0, max).sort((a, b) => a.rect.y - b.rect.y || a.rect.x - b.rect.x);
 
   const byId: Snapshot["byId"] = new Map();
   const labelCount = new Map<string, number>();
@@ -172,7 +188,7 @@ export function snapshot(max = 150): Snapshot {
     const id = `e${i + 1}`;
     const desc = describe(c.el);
     byId.set(id, { el: new WeakRef(c.el), desc, frame: c.frame });
-    return { id, role: desc.role, text: desc.text, aria: desc.aria, auto: desc.auto, state: stateOf(c.el), disabled: isDisabled(c.el) || undefined, x: c.rect.x, y: c.rect.y, w: c.rect.width, h: c.rect.height, region: regionOf(c.el), context: (labelCount.get(desc.text.toLowerCase()) ?? 0) > 1 || /^(get started|open|edit|view|more|details|select|go|learn more|icon: .*)$/i.test(desc.text) ? contextOf(c.el, desc.text) : undefined };
+    return { id, role: desc.role, text: desc.text, aria: desc.aria, auto: desc.auto, state: stateOf(c.el), disabled: isDisabled(c.el) || undefined, x: c.rect.x, y: c.rect.y, w: c.rect.width, h: c.rect.height, region: regionOf(c.el), offscreen: c.scrolled || undefined, context: (labelCount.get(desc.text.toLowerCase()) ?? 0) > 1 || /^(get started|open|edit|view|more|details|select|go|learn more|icon: .*)$/i.test(desc.text) ? contextOf(c.el, desc.text) : undefined };
   });
   const under = pointer ? elements.filter((e) => pointer!.x >= e.x && pointer!.x <= e.x + e.w && pointer!.y >= e.y && pointer!.y <= e.y + e.h).sort((a, b) => a.w * a.h - b.w * b.h)[0] : undefined;
   const sel = String(getSelection()?.toString() ?? "");
