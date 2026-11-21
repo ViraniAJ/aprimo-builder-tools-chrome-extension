@@ -18,7 +18,7 @@ export function isContinuation(q: string): boolean {
 }
 
 export const FIRST_STEP_TEXT =
-  'If this is something they want to do on this page now, they may do it step by step while you watch. Say what to do now (you can name the steps after it in a few words) and show the first thing to use. Then end the reply with one more line: "STEPS: more" if there\'s more to do after this step, or "STEPS: done" if this step finishes it or it isn\'t a task to do on the page.';
+  'If this is something they want to do on this page now, they may do it step by step while you watch. Say what to do now (you can name the steps after it in a few words) and show the first thing to use, even if it is only the menu or link that leads to the right page. Then end the reply with one more line: "STEPS: more" if there\'s more to do after this step, or "STEPS: done" if this step finishes it or it isn\'t a task to do on the page.';
 
 export type GuideAction =
   | { kind: "click-target"; label?: string }

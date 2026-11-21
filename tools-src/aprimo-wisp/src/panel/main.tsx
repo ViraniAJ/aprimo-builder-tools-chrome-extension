@@ -229,6 +229,13 @@ function Entry({ e }: { e: ChatEntry }) {
             ))}
           </div>
         )}
+        {e.done && r.raw !== undefined && (
+          <details className="mt-1.5 text-[11px] text-muted">
+            <summary className="cursor-pointer select-none">Details</summary>
+            <div className="mt-1">Topic: {r.topic || "–"} · Pointed: {r.pointed ? `yes${r.firstLabel ? ` (${r.firstLabel})` : ""}` : "no"}{r.stepsMore !== undefined ? ` · Steps: ${r.stepsMore ? "more" : "done"}` : ""}{r.pageTitle ? ` · Page: ${r.pageTitle}` : " · Not on an Aprimo page"}{r.shot ? " · Screenshot sent" : " · No screenshot"}</div>
+            <pre className="mt-1 max-h-48 overflow-auto whitespace-pre-wrap rounded bg-page p-2 font-mono text-[11px] text-fg">{r.raw || "(empty reply)"}</pre>
+          </details>
+        )}
         {e.done && r.model && <div className="mt-1.5 text-[10px] text-muted">{r.provider === "local" ? "Offline model" : modelInfo(r.model).displayName}{r.firstTokenMs ? ` · ${(r.firstTokenMs / 1000).toFixed(1)} s to first words` : ""}</div>}
       </div>
     </div>

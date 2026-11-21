@@ -150,6 +150,8 @@ function Companion({ s, update, locked }: TabProps) {
       <Section title="Look">
         <Field label="Outline"><Segmented value={s.outline} onChange={(v) => look({ outline: v })} options={[{ value: "white", label: "White" }, { value: "black", label: "Black" }, { value: "none", label: "None" }]} /></Field>
         <Field label="Size" locked={locked("cursorScale")}><Range value={s.cursorScale} min={0.6} max={2} step={0.05} format={(v) => `${v.toFixed(2)}×`} onChange={(v) => look({ cursorScale: v })} /></Field>
+        <Toggle checked={s.keepOnScreen} onChange={(v) => look({ keepOnScreen: v })} label="Keep the companion on screen" help={s.keepOnScreen ? "Your companion waits beside your pointer and flies off to show you things." : "The companion appears beside your pointer when you ask, flies to what it shows you, then fades away."} />
+        <Field label="Transparency when idle"><Range value={s.idleOpacity} min={0.2} max={1} step={0.05} format={(v) => `${Math.round(v * 100)}%`} disabled={!s.keepOnScreen} onChange={(v) => look({ idleOpacity: v })} /></Field>
         <Field label="Reduce motion"><Segmented value={s.reduceMotion} onChange={(v) => look({ reduceMotion: v })} options={[{ value: "system", label: "Follow system" }, { value: "on", label: "Always" }, { value: "off", label: "Never" }]} /></Field>
       </Section>
     </>

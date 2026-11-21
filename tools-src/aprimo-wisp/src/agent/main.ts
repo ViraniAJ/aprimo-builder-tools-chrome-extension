@@ -221,6 +221,7 @@ import { cleanSelection, describe, lastPointer, mask, snapshot } from "./snapsho
       case "draw": draw(msg.cmd); sendResponse({ ok: true }); return;
       case "caption": ov().setCaption(msg.text, msg.hold ?? !msg.final, !msg.final); sendResponse({ ok: true }); return;
       case "clear": stopWatch(); ov().holdShapes = false; ov().clearAll(); plan = []; sendResponse({ ok: true }); return;
+      case "companion": if (msg.state === "thinking") ov().summon(true); else overlay?.release(); sendResponse({ ok: true }); return;
       case "look": savedLook = { ...savedLook, ...msg.look }; overlay?.setLook(msg.look); sendResponse({ ok: true }); return;
       case "steps": planTurn = msg.turn; plan = msg.steps; at = 0; showStep(); sendResponse({ ok: true }); return;
       case "watch": startWatch(msg.turn, msg.target, msg.label, msg.caption); sendResponse({ ok: true }); return;
@@ -233,13 +234,15 @@ import { cleanSelection, describe, lastPointer, mask, snapshot } from "./snapsho
   });
 
   // Apply the saved companion look.
-  chrome.storage.local.get("wisp.settings").then((r) => {
-    const s = r["wisp.settings"] ?? {};
-    const look = { theme: s.cursorTheme, scale: s.cursorScale, outline: s.outline, reduceMotion: s.reduceMotion, captionSize: s.captionSize, captionPosition: s.captionPosition, showCaptions: s.showCaptions };
+  const applyLook = (s: any) => {
+    const look = { theme: s.cursorTheme, scale: s.cursorScale, outline: s.outline, reduceMotion: s.reduceMotion, captionSize: s.captionSize, captionPosition: s.captionPosition, showCaptions: s.showCaptions, keepOnScreen: s.keepOnScreen ?? false, idleOpacity: s.idleOpacity };
     const defined = Object.fromEntries(Object.entries(look).filter(([, v]) => v !== undefined));
     savedLook = defined;
     overlay?.setLook(defined);
-  }).catch(() => {});
+    if (s.keepOnScreen) ov(); // the companion waits beside the pointer
+  };
+  chrome.storage.local.get("wisp.settings").then((r) => applyLook(r["wisp.settings"] ?? {})).catch(() => {});
+  chrome.storage.onChanged.addListener((changes, area) => { if (area === "local" && changes["wisp.settings"]) applyLook(changes["wisp.settings"].newValue ?? {}); });
 
   // Expose for tests in the fake-aprimo harness.
   (window as any).__aprimoWispDebug = { snapshot, findByDescriptor };

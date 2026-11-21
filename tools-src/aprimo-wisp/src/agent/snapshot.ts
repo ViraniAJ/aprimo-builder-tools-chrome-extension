@@ -38,8 +38,38 @@ function labelOf(el: Element): string {
     const lbl = i.id ? el.ownerDocument.querySelector(`label[for="${CSS.escape(i.id)}"]`)?.textContent : "";
     return clean(lbl || i.placeholder || el.getAttribute("aria-label") || i.name || "");
   }
-  const text = (el as HTMLElement).innerText ?? el.textContent ?? "";
-  return clean(text).slice(0, 80);
+  const text = clean(visibleText(el)).slice(0, 80);
+  if (text) return text;
+  // Icon-only controls: their tooltip or label, else the icon's name ("icon: help").
+  const tip = el.getAttribute("aria-label") || el.getAttribute("title") || el.getAttribute("mattooltip") || el.getAttribute("ng-reflect-message") || "";
+  if (tip) return clean(tip).slice(0, 80);
+  const icon = clean(el.querySelector(ICON)?.textContent || el.querySelector(ICON)?.getAttribute("fonticon") || "");
+  return icon ? `icon: ${icon.replace(/_/g, " ")}` : "";
+}
+
+// Material icon fonts render their names as text ("arrow_forward"); leave those out of labels.
+const ICON = "mat-icon, .mat-icon, .material-icons, .material-icons-outlined, .material-symbols-outlined, .material-symbols-rounded, [fonticon], [data-mat-icon-name]";
+function visibleText(el: Element): string {
+  if (!el.querySelector(ICON)) return (el as HTMLElement).innerText ?? el.textContent ?? "";
+  const copy = el.cloneNode(true) as Element;
+  copy.querySelectorAll(ICON).forEach((i) => i.remove());
+  return copy.textContent ?? "";
+}
+
+/** The title of the card, row or section a control sits in, for controls whose own label repeats ("GET STARTED"). */
+const HEADING = "h1, h2, h3, h4, h5, [role=heading], legend, mat-card-title, [class*=card-title], [class*=-title], [class*=header]";
+function contextOf(el: Element, label: string): string | undefined {
+  let box: Element | null = el.parentElement;
+  for (let depth = 0; box && depth < 8 && box !== document.body; depth++, box = box.parentElement) {
+    if (box.matches("main, [role=main], mat-sidenav-content")) break;
+    const h = [...box.querySelectorAll(HEADING)].find((x) => !x.contains(el) && clean(visibleText(x)));
+    if (h) {
+      const t = clean(visibleText(h)).slice(0, 60);
+      return t.toLowerCase() !== label.toLowerCase() ? t : undefined;
+    }
+    if (box.matches("tr, [role=row]")) { const first = box.querySelector("td, [role=gridcell]"); const t = clean(first ? visibleText(first) : "").slice(0, 60); if (t && !first?.contains(el)) return t; }
+  }
+  return undefined;
 }
 
 export function describe(el: Element): Descriptor {
@@ -136,11 +166,13 @@ export function snapshot(max = 150): Snapshot {
   const chosen = kept.slice(0, max).sort((a, b) => a.rect.y - b.rect.y || a.rect.x - b.rect.x);
 
   const byId: Snapshot["byId"] = new Map();
+  const labelCount = new Map<string, number>();
+  for (const c of chosen) { const l = labelOf(c.el).toLowerCase(); labelCount.set(l, (labelCount.get(l) ?? 0) + 1); }
   const elements: PageElement[] = chosen.map((c, i) => {
     const id = `e${i + 1}`;
     const desc = describe(c.el);
     byId.set(id, { el: new WeakRef(c.el), desc, frame: c.frame });
-    return { id, role: desc.role, text: desc.text, aria: desc.aria, auto: desc.auto, state: stateOf(c.el), disabled: isDisabled(c.el) || undefined, x: c.rect.x, y: c.rect.y, w: c.rect.width, h: c.rect.height, region: regionOf(c.el) };
+    return { id, role: desc.role, text: desc.text, aria: desc.aria, auto: desc.auto, state: stateOf(c.el), disabled: isDisabled(c.el) || undefined, x: c.rect.x, y: c.rect.y, w: c.rect.width, h: c.rect.height, region: regionOf(c.el), context: (labelCount.get(desc.text.toLowerCase()) ?? 0) > 1 || /^(get started|open|edit|view|more|details|select|go|learn more|icon: .*)$/i.test(desc.text) ? contextOf(c.el, desc.text) : undefined };
   });
   const under = pointer ? elements.filter((e) => pointer!.x >= e.x && pointer!.x <= e.x + e.w && pointer!.y >= e.y && pointer!.y <= e.y + e.h).sort((a, b) => a.w * a.h - b.w * b.h)[0] : undefined;
   const sel = String(getSelection()?.toString() ?? "");

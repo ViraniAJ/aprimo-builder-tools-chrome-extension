@@ -104,7 +104,8 @@ Coordinates may be pixels, 0 to 1000, or 0 to 1, per model. The control list is 
 | Local intents: retry, repeat, capabilities, keep reading, read clipboard, read selection or page, copy screen text, magnify, voice commands, quick math, time, little helpers, notes, timers, history recall | Same | Timers use `chrome.alarms`, speak and notify. Magnify crops the tab screenshot around the pointer |
 | Writing help on selected text | Same | Works on text selected on the Aprimo page; the result goes to the clipboard |
 | Built-in shapes, free sketch | Same | Drawn on the page around the pointer |
-| GesturePlanner hand-drawn marks | Same | Circle overshoot, underline sag, arrow bow, constant-speed pen |
+| Companion flies out when you ask, moves to each visual as its sentence is spoken, returns beside the pointer | Same | Curved flight, a tap ring on points, labels beside the cursor; "Keep the companion on screen" with idle transparency |
+| GesturePlanner hand-drawn marks, pen-traced by the cursor | Same | Circle overshoot, underline sag, arrow bow, constant-speed pen |
 | Companion themes, size, outline, reduce motion | Same 14 themes (accent colours) | The cursor is an SVG, not Wisp's Metal fluid shader |
 | Settings export and import, managed locks | Same | Uses `chrome.storage.managed` |
 | History (300, opt-in) and recent answers (10) | Same | Without "Keep history", it lasts until the browser closes |

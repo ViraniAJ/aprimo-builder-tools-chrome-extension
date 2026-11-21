@@ -35,6 +35,8 @@ export interface WispSettings {
   cursorScale: number;
   outline: "white" | "black" | "none";
   reduceMotion: "system" | "on" | "off";
+  keepOnScreen: boolean; // the companion waits beside the pointer between questions
+  idleOpacity: number;
   // offline model
   autoLocalFallback: boolean;
   localModelInstalled: string;
@@ -75,6 +77,8 @@ export function defaultSettings(): WispSettings {
     cursorScale: 1.0,
     outline: "white",
     reduceMotion: "system",
+    keepOnScreen: false,
+    idleOpacity: 0.85,
     autoLocalFallback: true,
     localModelInstalled: "",
     privacyAccepted: false,
@@ -131,6 +135,7 @@ function sanitize(s: WispSettings): WispSettings {
     rate: Math.round(clamp(s.rate, 0.5, 2.0) * 100) / 100,
     volume: clamp(s.volume, 0, 1),
     cursorScale: clamp(s.cursorScale, 0.6, 2.0),
+    idleOpacity: clamp(s.idleOpacity, 0.2, 1.0),
     timeoutSeconds: clamp(s.timeoutSeconds, 5, 120),
   };
 }

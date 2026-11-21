@@ -21,6 +21,7 @@ export type AgentRequest =
   | { kind: "wisp"; op: "draw"; turn: string; cmd: DrawCommand }
   | { kind: "wisp"; op: "caption"; text: string; final?: boolean; hold?: boolean }
   | { kind: "wisp"; op: "clear" }
+  | { kind: "wisp"; op: "companion"; state: "thinking" | "done" }
   | { kind: "wisp"; op: "look"; look: Partial<CompanionLook> }
   | { kind: "wisp"; op: "steps"; turn: string; steps: PlanStep[] }
   | { kind: "wisp"; op: "watch"; turn: string; target?: Target; label?: string; caption?: string }

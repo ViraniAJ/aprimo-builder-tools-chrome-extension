@@ -144,6 +144,7 @@ export async function runTurn(o: TurnOptions): Promise<TurnResult> {
   const onAprimo = isAprimoUrl(tab?.url);
   const agent = (m: AgentRequest) => { if (tab?.id && onAprimo) toTab(tab.id, m).catch(() => {}); };
   agent({ kind: "wisp", op: "clear" });
+  agent({ kind: "wisp", op: "companion", state: "thinking" });
 
   o.ui.status(onAprimo ? "Looking at the page…" : "Thinking…");
   const [page, shot, chunks] = await Promise.all([
@@ -182,10 +183,15 @@ export async function runTurn(o: TurnOptions): Promise<TurnResult> {
     let lastSentence = "";
     let greyedNote = "";
     const toVp = (t: Target): Target => (shot && page && t.kind !== "element" ? targetToViewport(t, space, { width: shot.width, height: shot.height }, page.viewport) : t);
-    const draw = (cmd: DrawCommand) => agent({ kind: "wisp", op: "draw", turn: id, cmd });
+    // Wisp shows each visual as the sentence before it starts being spoken.
+    let spokenStart: Promise<void> = Promise.resolve();
+    const draw = (cmd: DrawCommand) => { const gate = spokenStart; gate.then(() => agent({ kind: "wisp", op: "draw", turn: id, cmd })); };
     const say = (text: string) => {
       if (!s.speak) return;
-      speak(text, { voiceName: s.voiceName || undefined, rate: s.rate, volume: s.volume });
+      spokenStart = new Promise<void>((resolve) => {
+        const t = setTimeout(resolve, 4000); // never hold a visual back for long
+        speak(text, { voiceName: s.voiceName || undefined, rate: s.rate, volume: s.volume, onStart: () => { clearTimeout(t); resolve(); }, onEnd: () => { clearTimeout(t); resolve(); } });
+      });
     };
     const speakNew = (full: string, final: boolean) => {
       const clean = stripCitations(full);
@@ -238,7 +244,7 @@ export async function runTurn(o: TurnOptions): Promise<TurnResult> {
           result.say = sayParts.join(" ");
           o.ui.update({ say: result.say });
           if (s.showCaptions) agent({ kind: "wisp", op: "caption", text: stripCitations(text), final: true });
-          speakNew(result.say, false);
+          speakNew(result.say, true); // the line is complete: speak all of it now
           break;
         }
         case "shape": {
@@ -305,6 +311,7 @@ export async function runTurn(o: TurnOptions): Promise<TurnResult> {
     if (msg) agent({ kind: "wisp", op: "caption", text: msg, final: true });
   } finally {
     clearTimeout(stillThinking);
+    agent({ kind: "wisp", op: "companion", state: "done" });
   }
   result.ms = Math.round(performance.now() - t0);
   o.ui.update({ ...result });
