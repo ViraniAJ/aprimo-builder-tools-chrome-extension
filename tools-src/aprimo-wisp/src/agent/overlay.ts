@@ -87,10 +87,10 @@ svg.marks{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
 .chip button:hover{background:rgba(0,128,128,.08)}
 .chip button.primary{background:var(--a);color:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2),0 2px 2px rgba(0,0,0,.14)}
 .edge{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .5s ease;border-radius:0;
-  box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--a) 75%,transparent),inset 0 0 28px 6px color-mix(in srgb,var(--a) 32%,transparent),inset 0 0 90px 10px color-mix(in srgb,var(--b) 16%,transparent)}
+  box-shadow:inset 0 0 0 3px var(--a),inset 0 0 22px 8px color-mix(in srgb,var(--a) 50%,transparent),inset 0 0 120px 24px color-mix(in srgb,var(--b) 24%,transparent)}
 .edge.on{opacity:1;animation:edge 3.2s ease-in-out infinite}
-@keyframes edge{0%,100%{opacity:.6}50%{opacity:1}}
-.reduce .edge.on{animation:none;opacity:.8}
+@keyframes edge{0%,100%{opacity:.8}50%{opacity:1}}
+.reduce .edge.on{animation:none;opacity:1}
 @keyframes pulse{0%{stroke-opacity:.95}50%{stroke-opacity:.45}100%{stroke-opacity:.95}}
 .pulse{animation:pulse 1.4s ease-in-out infinite}
 .reduce .pulse{animation:none}
