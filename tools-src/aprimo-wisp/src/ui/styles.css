@@ -64,6 +64,9 @@ code { font-family: "Roboto Mono", ui-monospace, Menlo, monospace; font-size: 12
   filter: blur(14px); animation: wspr-spin 2.6s linear infinite; pointer-events: none;
 }
 .wspr-card.glow::before { opacity: .55; }
+/* Watching a walkthrough step: the same glow, slower and softer, breathing. */
+.wspr-card.watching::before { opacity: .4; animation: wspr-spin 7s linear infinite, wspr-breath 3.2s ease-in-out infinite; }
+@keyframes wspr-breath { 0%,100% { opacity: .22; } 50% { opacity: .5; } }
 @keyframes wspr-spin { to { --wspr-spin: 360deg; } }
 .wspr-orb { background: radial-gradient(circle at 30% 30%, #4db6ac, #008080 70%); box-shadow: 0 2px 8px rgba(0,128,128,.35); transition: transform .2s; }
 .wspr-orb:hover { transform: scale(1.06); }
@@ -75,4 +78,4 @@ code { font-family: "Roboto Mono", ui-monospace, Menlo, monospace; font-size: 12
 @keyframes wspr-wave { 0%,100% { height: 30%; } 50% { height: 100%; } }
 .wspr-shimmer { color: transparent; background: linear-gradient(90deg, rgba(0,0,0,.35) 0%, rgba(0,0,0,.75) 50%, rgba(0,0,0,.35) 100%); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; animation: wspr-shim 1.6s linear infinite; }
 @keyframes wspr-shim { to { background-position: -200% 0; } }
-@media (prefers-reduced-motion: reduce) { .wspr-card::before, .wspr-orb, .wspr-orb::after, .wspr-wave, .wspr-shimmer { animation: none !important; } }
+@media (prefers-reduced-motion: reduce) { .wspr-card.watching::before { opacity: .35; } .wspr-card::before, .wspr-orb, .wspr-orb::after, .wspr-wave, .wspr-shimmer { animation: none !important; } }

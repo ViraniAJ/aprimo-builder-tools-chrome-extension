@@ -101,6 +101,7 @@ import { cleanSelection, describe, lastPointer, mask, snapshot } from "./snapsho
         // A frame loading a new page of its own: the page changed, and its new document needs hooking.
         frame.addEventListener("load", () => {
           hookFrames();
+          overlay?.fadeShapes();
           if (watch) { observeAll(); noteAction({ kind: "page-changed", route: `${location.hash} (frame)` }, 800); }
           if (recording) send({ kind: "wisp-event", op: "recorded-action", at: (Date.now() - recordStart) / 1000, route: location.hash, action: "opened page", title: frame.contentDocument?.title || document.title });
         });
@@ -193,6 +194,8 @@ import { cleanSelection, describe, lastPointer, mask, snapshot } from "./snapsho
     // Positions inside a frame are relative to it: shift them into the page's coordinates.
     const off = frame ? rectOf(frame) : null;
     const x = e.clientX + (off?.x ?? 0), y = e.clientY + (off?.y ?? 0);
+    // Clicked what Wspr highlighted: fade the circle or box straight away.
+    if (overlay?.hits(x, y) || (watch && near(watch.target, x, y, target))) overlay?.fadeShapes();
     if (plan.length && stepEl && target && stepEl.contains(target) && !plan[at]?.until) advance();
     if (watch) {
       const el = target?.closest("a,button,[role],input,select,textarea,mat-option,[data-automation-id]") ?? target;
@@ -225,6 +228,7 @@ import { cleanSelection, describe, lastPointer, mask, snapshot } from "./snapsho
       const m = s.until.match(/^hash\s*~\s*(.+)$/i);
       if (!m || location.hash.toLowerCase().includes(m[1].trim().toLowerCase())) advance();
     }
+    overlay?.fadeShapes(); // a new page: what was highlighted belongs to the old one
     if (watch) noteAction({ kind: "page-changed", route: location.hash }, 800);
     if (recording) send({ kind: "wisp-event", op: "recorded-action", at: (Date.now() - recordStart) / 1000, route: location.hash, action: "opened page", title: document.title });
   };

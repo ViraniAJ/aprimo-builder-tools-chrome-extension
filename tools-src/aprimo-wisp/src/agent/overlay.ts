@@ -284,6 +284,34 @@ export class Overlay {
     this.kick();
   }
 
+  /** Is this page point on (or within a few px of) something currently highlighted? */
+  hits(x: number, y: number): boolean {
+    for (const item of [...this.items, ...this.queue]) {
+      for (const g of item.rects) {
+        const r = g();
+        if (r && x >= r.x - 6 && x <= r.right + 6 && y >= r.y - 6 && y <= r.bottom + 6) return true;
+      }
+    }
+    return false;
+  }
+
+  /** Fades the marks (circles, boxes, labels) out, then removes them: the user clicked what was shown, or moved on. */
+  fadeShapes() {
+    const going = [...this.items, ...this.queue];
+    if (!going.length) return;
+    this.tag.classList.remove("on");
+    for (const i of going) for (const e of i.els) { e.style.transition = "opacity .3s ease"; e.style.opacity = "0"; }
+    // Only these marks go; anything drawn after this (the next step's highlight) stays.
+    setTimeout(() => {
+      for (const i of going) i.els.forEach((e) => e.remove());
+      this.items = this.items.filter((i) => !going.includes(i));
+      this.queue = this.queue.filter((i) => !going.includes(i));
+      if (this.current && going.includes(this.current)) { this.current = null; this.flight = null; }
+      this.idleSince = performance.now();
+      this.kick();
+    }, 320);
+  }
+
   clearAll() {
     this.clearShapes();
     this.setCaption("");
@@ -480,7 +508,7 @@ export class Overlay {
       return tip;
     }
     const rs = item.rects.map((g) => g()).filter((r): r is DOMRect => !!r);
-    if (!rs.length) return null;
+    if (!rs.length) { item.els.forEach((e) => { e.style.opacity = "0"; }); return null; } // the control is gone (page changed)
     const r = rs[0];
     if (item.kind === "POINT") {
       let ring = item.els[0];

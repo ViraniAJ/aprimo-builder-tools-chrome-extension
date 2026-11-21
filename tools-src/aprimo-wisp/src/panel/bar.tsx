@@ -127,7 +127,7 @@ function Bar() {
 
   return (
     <div className="flex min-h-screen items-end justify-center px-10 pb-6 pt-12" onMouseEnter={() => { hover.current = true; }} onMouseLeave={() => { hover.current = false; }}>
-      <div ref={card} className={cx("wspr-card relative w-full max-w-[720px]", glow && "glow")}>
+      <div ref={card} className={cx("wspr-card relative w-full max-w-[720px]", glow ? "glow" : guide.active && "watching")}>
         <div className="relative overflow-hidden rounded-[20px] border border-black/[.05] bg-white/[.97] shadow-[0_12px_36px_-6px_rgba(0,0,0,.12),0_2px_10px_-2px_rgba(0,0,0,.06)] backdrop-blur">
           {history && entries.length > 1 && (
             <div className="max-h-[340px] space-y-3 overflow-y-auto border-b border-line bg-page px-4 py-3">
