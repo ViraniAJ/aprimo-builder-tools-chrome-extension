@@ -157,6 +157,14 @@ function Bar() {
             </div>
           )}
           {micError && <div className="mx-4 mt-2 rounded-lg bg-[rgb(253,237,237)] px-3 py-1.5 text-[12px] text-[rgb(95,33,32)]">{micError}</div>}
+          {/* "More" opens as a row inside the card (the frame is only as tall as the card, so a pop-up menu would be cut off). */}
+          {menu && (
+            <div className="mx-4 mt-2 flex flex-wrap justify-end gap-1.5">
+              <MenuChip onClick={() => { setMenu(false); ctrl.current?.newChat(); }}>New chat</MenuChip>
+              <MenuChip onClick={() => { setMenu(false); void openSettings(); }}>Settings</MenuChip>
+              <MenuChip onClick={async () => { setMenu(false); const t = await chrome.tabs.getCurrent(); if (t?.windowId) chrome.sidePanel.open({ windowId: t.windowId }).catch(() => {}); }}>Teach Wspr</MenuChip>
+            </div>
+          )}
 
           <div className="flex items-center gap-2 px-2.5 py-2.5">
             <button title={listening ? "Stop listening" : "Talk (Alt+Shift+Space)"} aria-label={listening ? "Stop listening" : "Talk"} onClick={toggleListen}
@@ -176,16 +184,7 @@ function Bar() {
                 <path d="M13 3a9 9 0 0 0-9 9H1l4 4 4-4H6a7 7 0 1 1 2.05 4.95l-1.42 1.42A9 9 0 1 0 13 3zm-1 5v5l4.25 2.52.77-1.28-3.52-2.09V8z" fill="currentColor" />
               </IconButton>
             )}
-            <div className="relative">
-              <IconButton title="More" onClick={() => setMenu((m) => !m)} active={menu}><circle cx="5" cy="12" r="2" fill="currentColor" /><circle cx="12" cy="12" r="2" fill="currentColor" /><circle cx="19" cy="12" r="2" fill="currentColor" /></IconButton>
-              {menu && (
-                <div className="absolute bottom-11 right-0 z-10 w-56 overflow-hidden rounded-xl border border-line bg-white py-1 text-[14px] shadow-lg">
-                  <MenuItem onClick={() => { setMenu(false); ctrl.current?.newChat(); }}>New chat</MenuItem>
-                  <MenuItem onClick={() => { setMenu(false); void openSettings(); }}>Settings</MenuItem>
-                  <MenuItem onClick={async () => { setMenu(false); const t = await chrome.tabs.getCurrent(); if (t?.windowId) chrome.sidePanel.open({ windowId: t.windowId }).catch(() => {}); }}>Teach Wspr a feature (side panel)</MenuItem>
-                </div>
-              )}
-            </div>
+            <IconButton title="More" onClick={() => setMenu((m) => !m)} active={menu}><circle cx="5" cy="12" r="2" fill="currentColor" /><circle cx="12" cy="12" r="2" fill="currentColor" /><circle cx="19" cy="12" r="2" fill="currentColor" /></IconButton>
             <IconButton title="Close (Esc)" onClick={() => { stopAll(); toPage({ type: "hide" }); }}><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" /></IconButton>
           </div>
         </div>
@@ -240,8 +239,8 @@ function IconButton({ title, onClick, children, primary, active }: { title: stri
   );
 }
 
-function MenuItem({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
-  return <button onClick={onClick} className="block w-full px-4 py-2 text-left hover:bg-black/[.04]">{children}</button>;
+function MenuChip({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
+  return <button onClick={onClick} className="rounded-full border border-primary/40 bg-white px-3 py-1 text-[13px] font-medium text-primary hover:bg-soft">{children}</button>;
 }
 
 createRoot(document.getElementById("root")!).render(<Bar />);
