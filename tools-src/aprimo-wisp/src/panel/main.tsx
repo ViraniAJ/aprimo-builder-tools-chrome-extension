@@ -11,6 +11,7 @@ import { videoLink } from "../kb/transcript";
 import { listen, micPermission, speechAvailable, type Listener } from "../voice/stt";
 import { stopSpeaking } from "../voice/tts";
 import { Button, WispMark, cx } from "../ui/components";
+import { Intro, introReduced } from "./intro";
 import { Recorder } from "./recorder";
 
 // Settings open inside Aprimo (Administration › Aprimo Wspr Settings) in the Aprimo tab of this window; a section
@@ -38,6 +39,9 @@ function App() {
   const [tab, setTab] = useState<"ask" | "teach">("ask");
   const [micError, setMicError] = useState("");
   const [onAprimo, setOnAprimo] = useState(true);
+  const [intro, setIntro] = useState(false);
+  const introOn = useRef(false);
+  const bootAt = useRef(Date.now());
   const ctrl = useRef<Controller | null>(null);
   const listener = useRef<Listener | null>(null);
   const bottom = useRef<HTMLDivElement>(null);
@@ -54,9 +58,12 @@ function App() {
         settings: setSettings,
       });
       off = onSettingsChanged(async () => { const n = await loadSettings(); setSettings(n); ctrl.current?.setSettings(n); });
-      // Opened by the shortcut a moment ago: start listening right away.
+      // Opened by the header button or the shortcut a moment ago: play the intro, then start listening.
       chrome.storage.session.get("wisp.talkAt").then((r) => {
-        if (Date.now() - Number(r["wisp.talkAt"] ?? 0) < 4000) { chrome.storage.session.remove("wisp.talkAt"); startListen(); }
+        if (Date.now() - Number(r["wisp.talkAt"] ?? 0) >= 4000) return;
+        chrome.storage.session.remove("wisp.talkAt");
+        if (introReduced(s.reduceMotion)) startListen();
+        else { introOn.current = true; setIntro(true); }
       });
     });
     initKB().catch((e) => console.warn("[wisp] knowledge index:", e));
@@ -65,7 +72,12 @@ function App() {
     chrome.tabs.onActivated.addListener(checkTab);
     chrome.tabs.onUpdated.addListener(checkTab);
     // The keyboard shortcut (Alt+Shift+Space) arrives from the service worker: press to start, press again to stop.
-    const onMsg = (m: any) => { if (m?.kind === "wisp-talk") toggleListen(); };
+    // Right after the panel opens, that same request also arrives here; it's handled by the start-up check above
+    // (intro, then listening), so don't let it toggle listening back off.
+    const onMsg = (m: any) => {
+      if (m?.kind !== "wisp-talk" || introOn.current) return;
+      if (Date.now() - bootAt.current < 2000) startListen(); else toggleListen();
+    };
     chrome.runtime.onMessage.addListener(onMsg);
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") stopAll(); };
     addEventListener("keydown", onKey);
@@ -106,8 +118,11 @@ function App() {
   const p = PROVIDERS[settings.provider];
   const modelName = settings.provider === "nvidia-nim" && settings.smartRouting ? "Smart routing" : modelInfo(settings.providers[settings.provider].model).displayName;
 
+  const introDone = () => { introOn.current = false; setIntro(false); startListen(); };
+
   return (
     <div className="flex h-screen flex-col">
+      {intro && <Intro onDone={introDone} />}
       <header className="flex h-14 items-center gap-2 border-b border-line bg-white px-3">
         <WispMark />
         <div className="min-w-0 flex-1">

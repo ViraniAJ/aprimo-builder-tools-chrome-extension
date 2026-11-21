@@ -112,13 +112,8 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg?.kind !== 'wisp-open' || !sender.tab) return;
   if (msg.talk) chrome.storage.session.set({ 'wisp.talkAt': Date.now() });
   const windowId = sender.tab.windowId;
-  // Was the panel already open? (The page plays its intro only when it wasn't.) Asked before opening, without awaiting,
-  // so the click still counts as the user action that lets the panel open.
-  const wasOpen = chrome.runtime.getContexts
-    ? chrome.runtime.getContexts({ contextTypes: ['SIDE_PANEL'] }).then((cs) => cs.some((c) => c.windowId === windowId || c.windowId == null || c.windowId < 0)).catch(() => false)
-    : Promise.resolve(false);
   chrome.sidePanel.open({ windowId })
-    .then(async () => { chrome.runtime.sendMessage({ kind: 'wisp-talk' }).catch(() => {}); sendResponse({ ok: true, wasOpen: await wasOpen }); })
+    .then(() => { chrome.runtime.sendMessage({ kind: 'wisp-talk' }).catch(() => {}); sendResponse({ ok: true }); })
     .catch((e) => { console.warn('[wisp] side panel:', e); sendResponse({ ok: false }); });
   return true;
 });
