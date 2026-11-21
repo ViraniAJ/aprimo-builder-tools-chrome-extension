@@ -31,6 +31,7 @@ export interface CompanionLook {
   showCaptions: boolean;
   keepOnScreen: boolean;
   idleOpacity: number; // 0.2–1, with keepOnScreen
+  highlight: "circle" | "box"; // how a pointed-at control is marked: a hand-drawn circle, or an outlined box
 }
 
 /** Wisp's companion themes: accent, secondary accent (the palette's two ends), plus Aprimo teal. */
@@ -52,7 +53,7 @@ export const THEMES: Record<string, { name: string; a: string; b: string }> = {
   graphite: { name: "Graphite", a: "#5B6B80", b: "#9AA7B8" },
 };
 
-const DEFAULT_LOOK: CompanionLook = { theme: "aprimo", scale: 1, outline: "white", reduceMotion: "system", captionSize: "medium", captionPosition: "pointer", showCaptions: true, keepOnScreen: false, idleOpacity: 0.85 };
+const DEFAULT_LOOK: CompanionLook = { theme: "aprimo", scale: 1, outline: "white", reduceMotion: "system", captionSize: "medium", captionPosition: "pointer", showCaptions: true, keepOnScreen: false, idleOpacity: 0.85, highlight: "circle" };
 const CAPTION_SCALE = { small: 0.87, medium: 1, large: 1.3 };
 const NS = "http://www.w3.org/2000/svg";
 const BESIDE = { x: 22, y: 26 }; // where the companion waits relative to the user's pointer
@@ -249,6 +250,12 @@ export class Overlay {
 
   // ── Visuals ───────────────────────────────────────────────────────────────
   add(kind: Kind, rects: Getter[], label?: string) {
+    // "Circle" highlight style: a point at a control is drawn as the pen-traced circle (as in the intro). A bare spot
+    // (no control, just a position) keeps the tap ring.
+    if (kind === "POINT" && this.look.highlight === "circle") {
+      const r = rects[0]?.();
+      if (r && (r.width > 30 || r.height > 30)) kind = "CIRCLE";
+    }
     this.enqueue({ kind, rects, label, seed: Math.floor(Math.random() * 1000), els: [], start: null, added: performance.now() });
   }
 

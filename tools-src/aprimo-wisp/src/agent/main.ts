@@ -290,7 +290,7 @@ import { cleanSelection, describe, lastPointer, mask, snapshot } from "./snapsho
 
   // Apply the saved companion look.
   const applyLook = (s: any) => {
-    const look = { theme: s.cursorTheme, scale: s.cursorScale, outline: s.outline, reduceMotion: s.reduceMotion, captionSize: s.captionSize, captionPosition: s.captionPosition, showCaptions: s.showCaptions, keepOnScreen: s.keepOnScreen ?? false, idleOpacity: s.idleOpacity };
+    const look = { theme: s.cursorTheme, scale: s.cursorScale, outline: s.outline, reduceMotion: s.reduceMotion, captionSize: s.captionSize, captionPosition: s.captionPosition, showCaptions: s.showCaptions, keepOnScreen: s.keepOnScreen ?? false, idleOpacity: s.idleOpacity, highlight: s.highlight };
     const defined = Object.fromEntries(Object.entries(look).filter(([, v]) => v !== undefined));
     savedLook = defined;
     overlay?.setLook(defined);

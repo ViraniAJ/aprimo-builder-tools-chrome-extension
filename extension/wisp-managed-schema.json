@@ -141,6 +141,10 @@
     "guideSteps": {
       "type": "boolean"
     },
+    "highlight": {
+      "type": "string",
+      "enum": ["circle", "box"]
+    },
     "surface": {
       "type": "string",
       "enum": ["bar", "panel"]

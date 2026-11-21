@@ -37,6 +37,7 @@ export interface WispSettings {
   outline: "white" | "black" | "none";
   reduceMotion: "system" | "on" | "off";
   keepOnScreen: boolean; // the companion waits beside the pointer between questions
+  highlight: "circle" | "box"; // how a control Wspr points at is marked
   idleOpacity: number;
   // offline model
   autoLocalFallback: boolean;
@@ -80,6 +81,7 @@ export function defaultSettings(): WispSettings {
     outline: "white",
     reduceMotion: "system",
     keepOnScreen: false,
+    highlight: "circle",
     idleOpacity: 0.85,
     autoLocalFallback: true,
     localModelInstalled: "",

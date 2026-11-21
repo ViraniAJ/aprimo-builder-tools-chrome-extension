@@ -109,7 +109,10 @@ export function placeSketch(stroke: Stroke, center: Pt, viewport: { width: numbe
 // ── GesturePlanner: hand-drawn marks ──
 export function gestureCircle(r: { x: number; y: number; w: number; h: number }, seed = 0, padding = 10): Stroke {
   const cx = r.x + r.w / 2, cy = r.y + r.h / 2;
-  const rx = Math.max((r.w / 2) * 1.48 + padding * 0.5, 18), ry = Math.max((r.h / 2) * 1.48 + padding * 0.5, 14);
+  // Wisp draws 1.48x the target, which suits buttons and links; on big targets (a card, a panel) that spills into
+  // the neighbours, so the factor tapers to 1.18 by 240px (the oval then skims the corners).
+  const k = (d: number) => 1.18 + 0.3 * Math.max(0, Math.min(1, (240 - d) / 180));
+  const rx = Math.max((r.w / 2) * k(r.w) + padding * 0.5, 18), ry = Math.max((r.h / 2) * k(r.h) + padding * 0.5, 14);
   const phase = (seed % 7) * 0.9, start = 0.82 * Math.PI, sweep = -2.12 * Math.PI, n = 72;
   return Array.from({ length: n + 1 }, (_, i) => {
     const t = i / n, a = start + sweep * t, wob = 1 + 0.035 * Math.sin(3 * a + phase) + 0.05 * t;
