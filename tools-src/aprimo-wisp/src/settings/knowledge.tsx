@@ -111,6 +111,12 @@ export function KnowledgeTab() {
                 <span className="truncate text-fg">{d.title}</span>
               </a>
               <span className="shrink-0 text-xs text-muted">{d.recipe?.length ? `${d.recipe.length} clicks` : ""}{d.recipe?.length && d.textLength ? " · " : ""}{d.textLength ? "narrated" : d.recipe?.length ? "" : "no narration or clicks"}</span>
+              <button className="shrink-0 rounded px-2 py-0.5 text-xs text-muted hover:bg-danger/10 hover:text-danger" title="Delete this recording" onClick={async () => {
+                if (!confirm(`Delete the recording “${d.title}”? Wspr forgets what it learned from it, and the video is removed from this computer.`)) return;
+                await removeDoc(d.id);
+                await deleteMedia(String(d.url).slice(11));
+                refresh();
+              }}>Delete</button>
             </div>
           ))}
           {!recordings.length && <div className="py-2 text-sm text-muted">No recordings yet.</div>}

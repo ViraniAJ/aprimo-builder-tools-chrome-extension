@@ -3,8 +3,8 @@
 // This adds to Wisp's knowledge index; it does not retrain a model.
 import { useEffect, useRef, useState } from "react";
 import { activeTab, isAprimoUrl, toTab } from "../core/turn";
-import { addDocs } from "../kb/kb-client";
-import { putMedia } from "../kb/media";
+import { addDocs, removeDoc } from "../kb/kb-client";
+import { deleteMedia, putMedia } from "../kb/media";
 import type { KnowledgeDoc, RecipeStep, TranscriptSegment } from "../kb/types";
 import { transcribe } from "../voice/transcribe";
 import type { AgentEvent } from "../shared/messages";
@@ -24,6 +24,7 @@ export function Recorder() {
   const [elapsed, setElapsed] = useState(0);
   const rec = useRef<{ mr: MediaRecorder; streams: MediaStream[]; chunks: Blob[]; start: number; tabId?: number; ctx?: AudioContext } | null>(null);
   const blob = useRef<Blob | null>(null);
+  const savedId = useRef<string | null>(null); // the last saved recording, so it can be deleted right away
 
   useEffect(() => {
     const onMsg = (m: AgentEvent) => {
@@ -109,6 +110,7 @@ export function Recorder() {
   const save = async () => {
     if (!blob.current) return;
     const id = crypto.randomUUID();
+    savedId.current = id;
     const name = title.trim() || "Recorded walkthrough";
     setProgress({ label: "Saving…", value: 0.2 });
     try {
@@ -173,7 +175,17 @@ export function Recorder() {
       {phase === "saved" && (
         <div className="space-y-2">
           <div className="rounded-lg border border-ok/40 bg-ok/5 px-3 py-2 text-xs">Saved. Wspr will use “{title || "Recorded walkthrough"}” when someone asks about it, and can offer the video.</div>
-          <Button onClick={reset}>Record another</Button>
+          <div className="flex gap-2">
+            <Button onClick={reset}>Record another</Button>
+            <Button kind="ghost" onClick={async () => {
+              const id = savedId.current;
+              if (!id || !confirm("Delete this recording? Wspr forgets what it learned from it, and the video is removed from this computer.")) return;
+              await removeDoc(`recording:${id}`);
+              await deleteMedia(id);
+              savedId.current = null;
+              reset();
+            }}>Delete it</Button>
+          </div>
         </div>
       )}
     </div>
