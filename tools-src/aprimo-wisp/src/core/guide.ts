@@ -24,23 +24,33 @@ export function isContinuation(q: string): boolean {
 }
 
 export const FIRST_STEP_TEXT =
-  'They want to do this in Aprimo now, one step at a time, while you watch. If it is something to do in Aprimo, give ONLY the first step, in one or two short sentences, and show where it is on this page, even if it is only the menu, card or link that leads to the right page. Do not list, number or describe the steps after it, even if the notes list them all: once they have done this step you will see the page again and give the next one. End the reply with one more line: "STEPS: more" if there is more to do after this step, or "STEPS: done" if this step finishes it. If it is not something to do in Aprimo, answer it normally and end with "STEPS: done".';
+  'They want to do this in Aprimo now, one step at a time, while you watch. If it is something to do in Aprimo, give ONLY the first action (one thing to click, choose or type), in one short sentence, and show where it is on this page, even if it is only the menu, card or link that leads to the right page. Do not say what comes after it, not even with "then", and do not list or number the steps, even if the notes list them all: once they have done this step you will see the page again and give the next one. End the reply with one more line: "STEPS: more" if there is more to do after this step, or "STEPS: done" if this step finishes it. If it is not something to do in Aprimo, answer it normally and end with "STEPS: done".';
 
-/** Most sentences one walkthrough step may speak. */
+/** Most sentences one walkthrough step may speak (the action, plus a short note about where it is). */
 export const MAX_STEP_SENTENCES = 2;
+// Where a reply runs on into the next action: ", then …", "and then …", "; next …", or a sentence starting "Then",
+// "Next", "After that", "Once it opens", "When the dialog appears", "Finally"…
+const NEXT_IN_SENTENCE = /(?:,\s*(?:and\s+)?then\b|\s+and\s+then\b|;\s*(?:then|next)\b|,\s*(?:and\s+)?(?:next|after that|afterwards)\b)/i;
+const NEXT_SENTENCE = /^\s*(?:then|next|after that|afterwards|after this|once|when|from there|finally|lastly|now)\b/i;
 /**
- * Keeps a walkthrough step to the step itself: cuts a reply that starts on the next step ("2.", "Step 2",
- * "Secondly") and anything past the first two sentences. Models often recite every step from a help article;
- * the walkthrough gives the next one after watching the user do this one.
+ * Keeps a walkthrough step to one action, so Wspr doesn't say the next one before the user has done this one (and
+ * then say it again after). Cuts a numbered next step ("2.", "Step 2", "Secondly"), a clause or sentence that moves
+ * on ("…, then click Users", "Then choose Reset password"), and anything past two sentences.
  */
 export function capStep(text: string): { text: string; cut: boolean } {
   let t = text;
   let cut = false;
-  const next = t.search(/(?:^|\s)(?:2[.)]\s|step (?:2|two)\b|secondly\b)/i);
-  if (next > 0) { t = t.slice(0, next).trim(); cut = true; }
+  const numbered = t.search(/(?:^|\s)(?:2[.)]\s|step (?:2|two)\b|secondly\b)/i);
+  if (numbered > 0) { t = t.slice(0, numbered).trim(); cut = true; }
   const sentences = t.match(/[^.!?]+(?:[.!?]+["')\]]*|$)/g)?.filter((x) => x.trim()) ?? [t];
-  if (sentences.length > MAX_STEP_SENTENCES) { t = sentences.slice(0, MAX_STEP_SENTENCES).join("").trim(); cut = true; }
-  t = t.replace(/(?:^|\s)1[.)]\s+/, " ").trim(); // a leftover "1." from a numbered list
+  const kept: string[] = [];
+  for (const [i, sentence] of sentences.entries()) {
+    if (i >= MAX_STEP_SENTENCES || (i > 0 && NEXT_SENTENCE.test(sentence))) { cut = true; break; }
+    const m = sentence.search(NEXT_IN_SENTENCE);
+    if (m > 0) { kept.push(sentence.slice(0, m).trimEnd() + "."); cut = true; break; }
+    kept.push(sentence);
+  }
+  t = kept.join("").trim().replace(/(?:^|\s)1[.)]\s+/, " ").trim(); // a leftover "1." from a numbered list
   return { text: t, cut };
 }
 
@@ -79,7 +89,7 @@ export function requestText(o: { goal: string; history: GuideStepRecord[]; curre
     const used = o.targetLabel ? `"${o.targetLabel}", the control you showed` : "what you showed";
     lines.push(`They clicked ${used}, so that step is done: don't ask them to do it again. Give the step after it and show where it is. If what it opens isn't on the page yet, say what to do in it once it appears and show nothing.`);
   }
-  lines.push('Look at it carefully. If the task is finished, say so in a few words and show nothing. If they clearly did something else and the step still needs doing, say it once more in different words and show it again. Otherwise give only the next step: one or two short sentences, and show where it is. End with "STEPS: more" if more steps follow, or "STEPS: done" if the task is finished or this step finishes it.');
+  lines.push('Look at it carefully. If the task is finished, say so in a few words and show nothing. If they clearly did something else and the step still needs doing, say it once more in different words and show it again. Otherwise give only the next action (one thing to click, choose or type) in one short sentence, and show where it is. Do not repeat steps they have already done, and do not say what comes after this one, not even with "then". End with "STEPS: more" if more steps follow, or "STEPS: done" if the task is finished or this step finishes it.');
   return lines.join("\n");
 }
 

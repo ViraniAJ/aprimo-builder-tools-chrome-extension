@@ -176,8 +176,12 @@ describe("walkthroughs: one step at a time", () => {
   it("keeps only the first step", () => {
     expect(capStep("Open Content Administration in the left menu.").cut).toBe(false);
     expect(capStep("1. Open Content Administration. 2. Click Classifications. 3. Click New.")).toEqual({ text: "Open Content Administration.", cut: true });
-    expect(capStep("Open Content Administration. Then click Classifications. Then click New and fill in the name.")).toEqual({ text: "Open Content Administration. Then click Classifications.", cut: true });
-    expect(capStep("Click Admin, then Step 2 is choosing Classifications.").text).toBe("Click Admin, then");
+    expect(capStep("Open Content Administration. Then click Classifications. Then click New and fill in the name.")).toEqual({ text: "Open Content Administration.", cut: true });
+    expect(capStep("Click Admin, then Step 2 is choosing Classifications.").text).toBe("Click Admin.");
+    expect(capStep("Open Security in the left menu, then click Users.")).toEqual({ text: "Open Security in the left menu.", cut: true });
+    expect(capStep("Click the user's name. Once their details open, choose Reset password.").text).toBe("Click the user's name.");
+    expect(capStep("Click Users. It's under Security in the left menu.")).toEqual({ text: "Click Users. It's under Security in the left menu.", cut: false });
+    expect(capStep("Click Save and then close the dialog.").text).toBe("Click Save.");
     expect(capStep("Click Manage classifications.").text).toBe("Click Manage classifications.");
   });
 });
