@@ -74,10 +74,48 @@ import { cleanSelection, describe, lastPointer, mask, snapshot } from "./snapsho
     for (const r of records) if (!(r.target as Element).closest?.("#aprimo-wisp-overlay-host")) watch.muts += r.addedNodes.length + r.removedNodes.length + (r.type === "attributes" ? 0.2 : 0);
   });
 
+  // Aprimo shows some older admin pages (Users, for one) inside a same-origin frame, which can also load new pages
+  // of its own. Walkthroughs and recordings follow clicks, keys and changes inside those frames too.
+  const MO_OPTS: MutationObserverInit = { subtree: true, childList: true, attributes: true, attributeFilter: ["class", "aria-expanded", "aria-selected", "hidden"] };
+  const frameDocs = (root: Document = document, out: { doc: Document; frame: HTMLIFrameElement }[] = []) => {
+    for (const f of root.querySelectorAll("iframe")) {
+      let d: Document | null = null;
+      try { d = (f as HTMLIFrameElement).contentDocument; } catch { /* cross-origin */ }
+      if (d) { out.push({ doc: d, frame: f as HTMLIFrameElement }); frameDocs(d, out); }
+    }
+    return out;
+  };
+  function observeAll() {
+    if (document.body) mo.observe(document.body, MO_OPTS);
+    for (const { doc } of frameDocs()) if (doc.body) mo.observe(doc.body, MO_OPTS);
+  }
+  const hookedDocs = new WeakSet<Document>();
+  const hookedFrames = new WeakSet<HTMLIFrameElement>();
+  function hookFrames() {
+    for (const { doc, frame } of frameDocs()) {
+      if (!hookedFrames.has(frame)) {
+        hookedFrames.add(frame);
+        // A frame loading a new page of its own: the page changed, and its new document needs hooking.
+        frame.addEventListener("load", () => {
+          hookFrames();
+          if (watch) { observeAll(); noteAction({ kind: "page-changed", route: `${location.hash} (frame)` }, 800); }
+          if (recording) send({ kind: "wisp-event", op: "recorded-action", at: (Date.now() - recordStart) / 1000, route: location.hash, action: "opened page", title: frame.contentDocument?.title || document.title });
+        });
+      }
+      if (hookedDocs.has(doc)) continue;
+      hookedDocs.add(doc);
+      doc.addEventListener("click", (e) => onClick(e as MouseEvent, frame), true);
+      doc.addEventListener("keydown", (e) => onKey(e as KeyboardEvent), true);
+      doc.addEventListener("change", (e) => onChange(e), true);
+      if (watch && doc.body) mo.observe(doc.body, MO_OPTS);
+    }
+  }
+
   function startWatch(turn: string, target: Target | undefined, label: string | undefined, caption?: string) {
     stopWatch();
     watch = { turn, target, label, actions: [], clicked: false, used: false, baseRoute: location.hash, muts: 0, lastInput: 0, quiet: 800 };
-    mo.observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ["class", "aria-expanded", "aria-selected", "hidden"] });
+    hookFrames();
+    observeAll();
     const o = ov();
     o.holdShapes = true;
     if (caption) o.setCaption(caption);
@@ -146,19 +184,23 @@ import { cleanSelection, describe, lastPointer, mask, snapshot } from "./snapsho
     return Math.hypot(x - cx, y - cy) <= 70; // Wisp's clickReach
   };
 
-  document.addEventListener("click", (e) => {
-    const target = e.target instanceof Element ? e.target : null;
+  function onClick(e: MouseEvent, frame?: HTMLIFrameElement) {
+    const target = e.target && (e.target as Node).nodeType === 1 ? (e.target as Element) : null;
     if (target?.closest("#aprimo-wisp-overlay-host")) return;
+    // Positions inside a frame are relative to it: shift them into the page's coordinates.
+    const off = frame ? rectOf(frame) : null;
+    const x = e.clientX + (off?.x ?? 0), y = e.clientY + (off?.y ?? 0);
     if (plan.length && stepEl && target && stepEl.contains(target) && !plan[at]?.until) advance();
     if (watch) {
       const el = target?.closest("a,button,[role],input,select,textarea,mat-option,[data-automation-id]") ?? target;
       const label = el ? describe(el).text || describe(el).aria : undefined;
-      noteAction(near(watch.target, e.clientX, e.clientY, target) ? { kind: "click-target", label: watch.label ?? label } : { kind: "click-else", label }, 800);
+      noteAction(near(watch.target, x, y, target) ? { kind: "click-target", label: watch.label ?? label } : { kind: "click-else", label }, 800);
     }
     if (recording) recordClick(e);
-  }, true);
+  }
+  document.addEventListener("click", (e) => onClick(e), true);
 
-  document.addEventListener("keydown", (e) => {
+  function onKey(e: KeyboardEvent) {
     if (e.key === "Escape" && (watch || plan.length)) { if (watch) endWatch("esc"); else stopPlan(); return; }
     if (!watch) return;
     const mod = e.ctrlKey || e.altKey || e.metaKey;
@@ -167,7 +209,8 @@ import { cleanSelection, describe, lastPointer, mask, snapshot } from "./snapsho
     const name = named ?? `${e.ctrlKey ? "Control-" : ""}${e.altKey ? "Option-" : ""}${e.shiftKey ? "Shift-" : ""}${e.metaKey ? "Command-" : ""}${e.key.length === 1 ? e.key.toUpperCase() : "a key"}`;
     if (!mod && !named) { noteAction({ kind: "typing" }, 2000); return; }
     noteAction({ kind: "key", name }, 800);
-  }, true);
+  }
+  document.addEventListener("keydown", onKey, true);
 
   let lastRoute = location.hash;
   const onRoute = () => {
@@ -196,12 +239,13 @@ import { cleanSelection, describe, lastPointer, mask, snapshot } from "./snapsho
     const d = describe(el);
     send({ kind: "wisp-event", op: "recorded-action", at: (Date.now() - recordStart) / 1000, route: location.hash, action: d.role === "input" ? "clicked into" : "clicked", target: d, title: document.title });
   }
-  document.addEventListener("change", (e) => {
+  function onChange(e: Event) {
     if (!recording) return;
     const el = e.target as Element;
     const d = describe(el);
     send({ kind: "wisp-event", op: "recorded-action", at: (Date.now() - recordStart) / 1000, route: location.hash, action: el.tagName === "SELECT" ? "chose an option in" : "filled in", target: d, title: document.title });
-  }, true);
+  }
+  document.addEventListener("change", onChange, true);
 
   /** The page's readable text (selection first), for "read this page" and "copy the text on the page". */
   function pageText(max = 60000): { text: string; selection: boolean } {
@@ -227,7 +271,7 @@ import { cleanSelection, describe, lastPointer, mask, snapshot } from "./snapsho
       case "watch": startWatch(msg.turn, msg.target, msg.label, msg.caption); sendResponse({ ok: true }); return;
       case "watch-stop": stopWatch(); sendResponse({ ok: true }); return;
       case "page-text": sendResponse({ ...pageText(msg.max), pointer: lastPointer(), title: document.title }); return;
-      case "record-start": recording = true; recordStart = Date.now(); ov().setCaption("Wspr is recording your clicks…", true); sendResponse({ ok: true, title: document.title, route: location.hash }); return;
+      case "record-start": hookFrames(); recording = true; recordStart = Date.now(); ov().setCaption("Wspr is recording your clicks…", true); sendResponse({ ok: true, title: document.title, route: location.hash }); return;
       case "record-stop": recording = false; ov().setCaption(""); sendResponse({ ok: true }); return;
       case "navigate": if (/^#\//.test(msg.route)) location.hash = msg.route; sendResponse({ ok: true }); return;
     }
@@ -302,7 +346,7 @@ import { cleanSelection, describe, lastPointer, mask, snapshot } from "./snapsho
     alignButton();
   }
   placeButton();
-  setInterval(placeButton, 1500);
+  setInterval(() => { placeButton(); hookFrames(); }, 1500);
 
   // Expose for tests in the fake-aprimo harness.
   (window as any).__aprimoWispDebug = { snapshot, findByDescriptor };
