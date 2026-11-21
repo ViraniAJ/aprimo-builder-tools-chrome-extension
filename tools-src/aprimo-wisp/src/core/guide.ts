@@ -8,9 +8,9 @@ export const IDLE_TIMEOUT_MS = 300_000;
 export const MAX_ACTIONS_PER_STEP = 8;
 
 const TASK_STARTS = ["how do i", "how can i", "how to", "how would i", "how should i", "how do we", "how do you", "where do i", "where can i", "help me", "walk me through", "show me how", "i want to", "i need to", "i'd like to", "can you show me how", "can you help me", "can you walk me", "teach me", "guide me", "what do i do to", "what do i click to", "how am i supposed to"];
-const MORE_TASK_STARTS = ["what are the steps", "what's the process", "whats the process", "what is the process", "steps to", "steps for", "the steps to", "process to", "process for", "how would one", "how does one", "how can we", "how should we", "where do we", "show me where", "take me through", "can you show me", "could you show me", "please show me", "i'm trying to", "im trying to", "i am trying to", "trying to", "i want to know how", "i'd like to know how", "let's", "lets"];
+const MORE_TASK_STARTS = ["what are the steps", "what's the process", "whats the process", "what is the process", "steps to", "steps for", "the steps to", "process to", "process for", "how would one", "how does one", "how can we", "how should we", "where do we", "show me where", "take me through", "can you show me", "could you show me", "please show me", "i'm trying to", "im trying to", "i am trying to", "trying to", "i want to know how", "i'd like to know how", "let's", "lets", "is there a way to", "is it possible to", "can i", "could i", "how would i go about", "what's the way to", "whats the way to", "where is the option to", "where's the option to", "where do you", "i forgot how to", "remind me how to", "i have to", "i've got to", "ive got to", "we need to", "we want to"];
 // Said as a command ("create a classification", "set up a workflow"): Wspr can't do it, so it walks them through it.
-const DO_VERBS = /^(?:please |can you |could you )?(?:create|add|set up|setup|configure|upload|edit|change|delete|remove|rename|move|share|publish|import|export|assign|build|enable|disable|turn on|turn off|update|download|archive|approve|submit|schedule|invite|duplicate|attach|tag|translate|review|find|locate|open|navigate to|go to|get to)\b/;
+const DO_VERBS = /^(?:please |can you |could you )?(?:create|add|set up|setup|configure|upload|edit|change|delete|remove|rename|move|share|publish|unpublish|import|export|assign|unassign|build|enable|disable|turn on|turn off|update|download|archive|restore|approve|reject|submit|schedule|invite|duplicate|copy|clone|attach|tag|translate|review|find|locate|open|navigate to|go to|get to|reset|unlock|lock|deactivate|activate|grant|revoke|give|allow|block|set|make|start|launch|run|check in|check out|version|replace|crop|resize|convert|merge|link|unlink|search for|filter|sort)\b/;
 export const isTask = (q: string) => {
   const t = norm(q).replace(/^(?:(?:hey|hi|ok|okay|so|um|uh|wisp)[,!]? )+/, "");
   return TASK_STARTS.some((p) => t.startsWith(p)) || MORE_TASK_STARTS.some((p) => t.startsWith(p)) || DO_VERBS.test(t);
@@ -24,7 +24,7 @@ export function isContinuation(q: string): boolean {
 }
 
 export const FIRST_STEP_TEXT =
-  'They want to do this in Aprimo now, one step at a time, while you watch. If it is something to do in Aprimo, give ONLY the first action (one thing to click, choose or type), in one short sentence, and show where it is on this page, even if it is only the menu, card or link that leads to the right page. Do not say what comes after it, not even with "then", and do not list or number the steps, even if the notes list them all: once they have done this step you will see the page again and give the next one. End the reply with one more line: "STEPS: more" if there is more to do after this step, or "STEPS: done" if this step finishes it. If it is not something to do in Aprimo, answer it normally and end with "STEPS: done".';
+  'They want to do this in Aprimo now, one step at a time, while you watch. If it is something to do in Aprimo, write "STEPS: more" right after the TOPIC line, then give ONLY the first action (one thing to click, choose or type), in one short sentence, and show where it is on this page, even if it is only the menu, card or link that leads to the right page. Do not say what comes after it, not even with "then", and do not list or number the steps, even if the notes list them all: once they have done this step you will see the page again and give the next one. End the reply with one more line: "STEPS: more" if there is more to do after this step, or "STEPS: done" if this step finishes it. If it is not something to do in Aprimo, answer it normally and end with "STEPS: done".';
 
 /** Most sentences one walkthrough step may speak (the action, plus a short note about where it is). */
 export const MAX_STEP_SENTENCES = 2;
@@ -95,9 +95,17 @@ export function requestText(o: { goal: string; history: GuideStepRecord[]; curre
 
 /** Should a walkthrough start after this answer? (Wisp: guideSteps on, a task, and STEPS more, or no STEPS line but it pointed.) */
 export function shouldStartGuide(o: { guideSteps: boolean; question: string; steps?: boolean; pointed: boolean }): boolean {
-  if (!o.guideSteps || !isTask(o.question)) return false;
-  return o.steps === true || (o.steps === undefined && o.pointed);
+  if (!o.guideSteps) return false;
+  if (o.steps === true) return true; // the AI flagged a task with more to do, however it was asked
+  return isTask(o.question) && o.steps === undefined && o.pointed;
 }
+
+/**
+ * Sent with every question on an Aprimo page that doesn't already look like a task: the AI decides. A task gets
+ * "STEPS: more" first (so Wspr knows straight away to say just one step) and only its first action.
+ */
+export const MAYBE_TASK_TEXT =
+  'If they want to do something in Aprimo that takes more than one action, walk them through it one step at a time while you watch: write "STEPS: more" right after the TOPIC line, then give ONLY the first action in one short sentence and show where it is. Do not list or number the steps and do not say what comes after it. Otherwise answer normally and leave out the STEPS line.';
 /** Should it end after a step answer? (STEPS done, or no STEPS line and nothing shown, or the step limit.) */
 export function shouldEndGuide(o: { steps?: boolean; pointed: boolean; stepCount: number }): boolean {
   // Only an explicit "STEPS: done" (or the step limit) ends it. A step without a STEPS line or a point usually

@@ -6,7 +6,7 @@ import type { AgentEvent, AgentRequest } from "../shared/messages";
 import { earcon, speak, stopSpeaking, untilQuiet } from "../voice/tts";
 import { builtInShape, isFreeSketch, parseStroke, placeShape, placeSketch, shapeSpokenName, shapeStrokes, sketchSubject, SKETCH_SYSTEM, type Pt } from "./drawing";
 import { Conversation, isNewChat } from "./conversation";
-import { FIRST_STEP_TEXT, GUIDE_CAPTIONS, isContinuation, isTask, requestText, shouldEndGuide, shouldStartGuide, type GuideAction, type GuideStepRecord, actionsText } from "./guide";
+import { FIRST_STEP_TEXT, MAYBE_TASK_TEXT, GUIDE_CAPTIONS, isContinuation, isTask, requestText, shouldEndGuide, shouldStartGuide, type GuideAction, type GuideStepRecord, actionsText } from "./guide";
 import {
   HISTORY_CAPACITY, RECENT_CAPACITY, cleanedWriting, historyTitle, isSummaryRequest, isWritingHelp, noteCommand, recall, runNoteCommand,
   spokenDuration, timerCommand, webAction, writingUserText, WRITING_SYSTEM, type HistoryEntry,
@@ -257,7 +257,7 @@ export class Controller {
     const history = await this.convo.messages(this.settings.provider === "local");
     const r = await runTurn({
       question, settings: this.settings, signal, secondOpinion: o.secondOpinion, clipboard, history,
-      guideText: walkthrough ? FIRST_STEP_TEXT : undefined, oneStep: walkthrough,
+      guideText: walkthrough ? FIRST_STEP_TEXT : this.settings.guideSteps ? MAYBE_TASK_TEXT : undefined, oneStep: walkthrough,
       ui: {
         status: (t) => { entry.status = t; this.ui.status(t); this.ui.entry({ ...entry }); },
         update: (p) => { entry.result = { ...entry.result, ...p }; if (p.say !== undefined) entry.say = p.say; this.ui.entry({ ...entry }); },

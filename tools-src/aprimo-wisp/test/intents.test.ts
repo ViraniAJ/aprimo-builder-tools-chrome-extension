@@ -185,3 +185,15 @@ describe("walkthroughs: one step at a time", () => {
     expect(capStep("Click Manage classifications.").text).toBe("Click Manage classifications.");
   });
 });
+
+describe("walkthroughs start however the task is asked", () => {
+  it("recognises more task phrasings", () => {
+    for (const q of ["reset a user's password", "Is there a way to unlock a user?", "can I deactivate this account", "so, um, how do I reset the password", "grant someone access to this record", "remind me how to add a classification"])
+      expect(isTask(q), q).toBe(true);
+  });
+  it("starts when the AI flags a task, even if the wording didn't match", () => {
+    expect(shouldStartGuide({ guideSteps: true, question: "the password thing for Ana", steps: true, pointed: false })).toBe(true);
+    expect(shouldStartGuide({ guideSteps: false, question: "how do I reset a password", steps: true, pointed: true })).toBe(false);
+    expect(shouldStartGuide({ guideSteps: true, question: "what is a classification?", steps: undefined, pointed: true })).toBe(false);
+  });
+});

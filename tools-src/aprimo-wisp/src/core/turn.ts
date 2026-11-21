@@ -26,6 +26,8 @@ export interface TurnResult {
   steps: StepView[];
   stepsMore?: boolean; // Wisp's STEPS: more | done (undefined when absent)
   pointed: boolean;
+  /** STEPS: more was inferred because the reply started a numbered list of steps. */
+  stepsInferred?: boolean;
   /** Why the cursor didn't move (or moved somewhere unexpected), shown under Details. */
   pointNotes?: string[];
   firstTarget?: Target;
@@ -252,13 +254,17 @@ export async function runTurn(o: TurnOptions): Promise<TurnResult> {
 
     // Walkthrough steps on the page say one step: anything past it is dropped, along with its visuals.
     let capped = false;
-    const stepOnly = () => o.oneStep && result.topic !== "other";
+    // A walkthrough step: asked for one, or the AI flagged a task (STEPS: more), or it started reading out a numbered
+    // list about the page (then it becomes a walkthrough rather than a recital).
+    const stepOnly = () => result.topic !== "other" && (o.oneStep || result.stepsMore === true);
+    const listStarts = (t: string) => s.guideSteps && result.topic !== "other" && onAprimo && /(?:^|\s)(?:2[.)]\s|step (?:2|two)\b)/i.test(t);
     const handle = (ev: ReplyEvent) => {
       if (capped && ev.type !== "steps" && ev.type !== "source" && ev.type !== "done" && !(ev.type === "shape" && !result.pointed)) return;
       switch (ev.type) {
         case "topic": result.topic = ev.text; o.ui.update({ topic: ev.text }); break;
         case "say-partial": {
           let live = [...sayParts, ev.text].join(" ");
+          if (!stepOnly() && listStarts(live)) { result.stepsMore = true; result.stepsInferred = true; }
           if (stepOnly()) live = capStep(live).text;
           o.ui.update({ say: live });
           o.ui.caption(stripCitations(ev.text));
@@ -269,6 +275,7 @@ export async function runTurn(o: TurnOptions): Promise<TurnResult> {
         case "say":
         case "text": {
           let text = result.topic === "other" ? withoutHedge(ev.text) : ev.text;
+          if (!stepOnly() && listStarts([...sayParts, text].join(" "))) { result.stepsMore = true; result.stepsInferred = true; }
           if (stepOnly()) {
             const before = sayParts.join(" ");
             const c = capStep(before ? `${before} ${text}` : text);
@@ -309,7 +316,7 @@ export async function runTurn(o: TurnOptions): Promise<TurnResult> {
           draw({ kind: "path", targets: ev.targets.map(toVp), label: ev.label });
           break;
         }
-        case "steps": result.stepsMore = ev.more; break;
+        case "steps": if (onAprimo && !(result.stepsInferred && !ev.more)) result.stepsMore = ev.more; break; // nothing to watch off Aprimo
         case "step": result.steps.push({ ...ev, target: ev.target ? toVp(ev.target) : undefined }); o.ui.update({ steps: [...result.steps] }); break;
         case "source": result.cited = [...new Set([...result.cited, ...ev.ids])]; o.ui.update({ cited: result.cited }); break;
         case "video": result.videos.push({ id: ev.id, at: ev.at, label: ev.label }); o.ui.update({ videos: [...result.videos] }); break;
