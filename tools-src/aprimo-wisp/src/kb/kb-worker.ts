@@ -73,6 +73,15 @@ function rebuildBM25() {
 
 const all = () => [...bundled, ...user];
 
+// Each extension page (side panel, Settings) runs its own copy of this worker. When one adds or removes knowledge,
+// tell the others to reload it, so an open panel sees newly indexed pages without being reopened.
+const changes = new BroadcastChannel("wisp-kb");
+let ready = false;
+changes.onmessage = async () => {
+  if (!ready) return;
+  try { await loadUser(); rebuildBM25(); } catch (e) { console.warn("[wisp] knowledge reload failed:", (e as Error).message); }
+};
+
 async function search(query: string, k: number, sources?: string[]) {
   const entries = all();
   if (!entries.length) return [];
@@ -136,16 +145,19 @@ self.onmessage = async (ev: MessageEvent) => {
         await loadBundled();
         await loadUser();
         rebuildBM25();
+        ready = true;
         return reply({ bundled: bundledInfo, user: user.length });
       case "search":
         return reply(await search(args.query, args.k ?? 6, args.sources));
       case "addDocs":
         await addDocs(args.docs, (done, total) => self.postMessage({ id, progress: { done, total } }));
+        changes.postMessage("changed");
         return reply({ user: user.length });
       case "removeDoc":
         await removeDoc(args.id);
         await loadUser();
         rebuildBM25();
+        changes.postMessage("changed");
         return reply({ user: user.length });
       case "listDocs":
         return reply(await listDocs());
