@@ -151,6 +151,19 @@
     document.documentElement.classList.toggle('arm-tool-open', open);
   }
 
+  // Scrolls only the admin menu's own scrolling list to centre an item. (scrollIntoView would also scroll Aprimo's
+  // layout containers, which are overflow: hidden, and push the header and navigation out of place.)
+  function revealInMenu(el) {
+    for (let p = el.parentElement; p && p !== document.body; p = p.parentElement) {
+      const o = getComputedStyle(p).overflowY;
+      if (!(o === 'auto' || o === 'scroll' || o === 'overlay') || p.scrollHeight <= p.clientHeight + 1) continue;
+      const r = el.getBoundingClientRect(), box = p.getBoundingClientRect();
+      const top = Math.max(box.top, 0), bottom = Math.min(box.bottom, innerHeight); // the part of the list on screen
+      p.scrollTop += r.top + r.height / 2 - (top + bottom) / 2;
+      return;
+    }
+  }
+
   // ── Content pane ───────────────────────────────────────────────────────────
   function sync() {
     const panel = buildSection();
@@ -169,7 +182,7 @@
         panel.__armSetOpen?.(true);
         panel.__armShownFor = tool.id;
         const item = panel.querySelector(`a[data-automation-id="arm-${tool.id}-left"]`);
-        setTimeout(() => item?.scrollIntoView({ block: 'center' }), 250); // after the expand animation
+        setTimeout(() => item && revealInMenu(item), 250); // after the expand animation
       }
       setHeader(tool);
       if (main) {

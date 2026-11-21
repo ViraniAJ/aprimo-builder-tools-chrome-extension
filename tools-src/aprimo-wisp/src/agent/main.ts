@@ -6,6 +6,7 @@ import type { Target } from "../core/reply-parser";
 import type { AgentEvent, AgentRequest, DrawCommand, PlanStep } from "../shared/messages";
 import { barForShot, showBar } from "./bar";
 import { Overlay } from "./overlay";
+import { revealWithin } from "./scroll";
 import { findByDescriptor, rectOf, resolve, type Known } from "./resolve";
 import { cleanSelection, describe, lastPointer, mask, snapshot } from "./snapshot";
 
@@ -31,7 +32,8 @@ import { cleanSelection, describe, lastPointer, mask, snapshot } from "./snapsho
     const o = ov();
     if (cmd.kind === "shape") {
       o.add(cmd.shape, [getter(cmd.target)], cmd.label);
-      elementOf(cmd.target)?.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
+      const el = elementOf(cmd.target);
+      if (el) revealWithin(el);
     } else if (cmd.kind === "arrow") o.add("ARROW", [getter(cmd.from), getter(cmd.to)], cmd.label);
     else if (cmd.kind === "path") o.add("PATH", cmd.targets.map(getter), cmd.label);
     else o.addStrokes(cmd.strokes, cmd.label);
@@ -52,7 +54,7 @@ import { cleanSelection, describe, lastPointer, mask, snapshot } from "./snapsho
     stepEl = elementOf(s.target);
     if (s.target) {
       if (s.target.kind === "element" && !stepEl) send({ kind: "wisp-event", op: "step-lost", turn: planTurn, index: s.index, text: s.text });
-      else { o.add("POINT", [getter(s.target)]); stepEl?.scrollIntoView({ block: "nearest", behavior: "smooth" }); }
+      else { o.add("POINT", [getter(s.target)]); if (stepEl) revealWithin(stepEl); }
     }
     o.setChip({ label: `Step ${s.index} of ${s.total}`, text: s.text, last: at >= plan.length - 1, onNext: advance, onStop: stopPlan });
     o.setCaption(s.text, true);

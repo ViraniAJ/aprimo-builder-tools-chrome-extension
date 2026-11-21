@@ -464,7 +464,8 @@ $('#copyExpr').addEventListener('click', () => navigator.clipboard.writeText(exp
 $('#pager').addEventListener('click', (e) => {
   const b = e.target.closest('button[data-p]'); if (!b) return;
   state.page += b.dataset.p === 'next' ? 1 : -1; load();
-  document.querySelector('main').scrollIntoView({ block: 'start' });
+  // Scroll this page only (scrollIntoView can also scroll Aprimo's layout around the tool's frame).
+  window.scrollTo({ top: document.querySelector('main').offsetTop });
 });
 $('#rows').addEventListener('click', (e) => { if (e.target.closest('a')) return; const tr = e.target.closest('tr[data-i]'); if (tr) openJob(state.jobs[+tr.dataset.i]); });
 $('#drawerBody').addEventListener('click', (e) => {
