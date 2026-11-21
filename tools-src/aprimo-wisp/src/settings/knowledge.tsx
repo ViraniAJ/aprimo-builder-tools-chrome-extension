@@ -24,7 +24,14 @@ export function KnowledgeTab() {
   const [filter, setFilter] = useState("");
 
   const refresh = async () => { setStats(await kbStats()); setDocs(await listDocs()); };
-  useEffect(() => { refresh().catch((e) => setMsg(`The knowledge index didn't load: ${e.message}`)); }, []);
+  useEffect(() => {
+    refresh().catch((e) => setMsg(`The knowledge index didn't load: ${e.message}`));
+    // Knowledge added elsewhere (a Teach recording saved in the side panel, another Settings tab) shows up here too.
+    const ch = new BroadcastChannel("wisp-kb");
+    ch.onmessage = () => { refresh().catch(() => {}); };
+    return () => ch.close();
+  }, []);
+  const recordings = docs.filter((d) => d.source === "recording");
 
   // Closing the page stops the crawl and the indexing, so ask first while either is running.
   useEffect(() => {
@@ -93,6 +100,22 @@ export function KnowledgeTab() {
       </Section>
 
       <AddSources busy={!!busy} onCrawl={runCrawl} onDocs={ingest} setMsg={setMsg} />
+
+      <Section title={`Your recordings (${recordings.length})`}>
+        <p className="mb-2 text-xs text-muted">Made with Teach in the side panel (Wspr › ⋯ › Teach Wspr). Wspr uses the narration and your clicks when guiding, and offers the video when someone asks about it.</p>
+        <div className="divide-y divide-line">
+          {recordings.map((d) => (
+            <div key={d.id} className="flex items-center gap-2 py-1.5 text-sm">
+              <a className="flex min-w-0 flex-1 items-center gap-2 no-underline" href={videoLink(d.url)} target="_blank" rel="noreferrer" title="Play the recording">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-white"><svg width="12" height="12" viewBox="0 0 24 24"><path d="M7 4v16l13-8z" fill="currentColor" /></svg></span>
+                <span className="truncate text-fg">{d.title}</span>
+              </a>
+              <span className="shrink-0 text-xs text-muted">{d.recipe?.length ? `${d.recipe.length} clicks` : ""}{d.recipe?.length && d.textLength ? " · " : ""}{d.textLength ? "narrated" : d.recipe?.length ? "" : "no narration or clicks"}</span>
+            </div>
+          ))}
+          {!recordings.length && <div className="py-2 text-sm text-muted">No recordings yet.</div>}
+        </div>
+      </Section>
 
       <Section title={`Your documents (${docs.length})`} right={
         <div className="flex gap-2">

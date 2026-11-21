@@ -100,7 +100,7 @@ UNDERLINE: e17 | label   or   UNDERLINE: x1, y1, x2, y2 | label
 ARROW: e4 -> e17 | label   or   ARROW: x1, y1, x2, y2 | label
 PATH: x1, y1, x2, y2, x3, y3, … | label    (a freehand pen stroke, only for drawing)
 SOURCE: k12, k40                           (the reference notes you used)
-VIDEO: k7 @83 | title                      (offer a recorded demo, starting at a second, when it shows the answer)
+VIDEO: k7 @83 | title                      (a recorded demo that shows how: offer it whenever one matches, starting at the right second)
 NAV: #/route                               (suggest opening another Aprimo page; they confirm first)
 A showing line goes right after the sentence it belongs to, and only in TOPIC: screen replies.
 {coords}`;

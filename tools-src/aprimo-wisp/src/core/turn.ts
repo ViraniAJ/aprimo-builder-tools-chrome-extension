@@ -335,6 +335,11 @@ export async function runTurn(o: TurnOptions): Promise<TurnResult> {
     }
     for (const ev of parser.end()) handle(ev);
     speakNew(result.say, true);
+    // A recording made with Teach (or a linked demo) among the best matches: offer it, even if the AI didn't.
+    if (!result.videos.length) {
+      const demo = notes.slice(0, 3).find((n) => n.video && (n.source === "recording" || n.source === "video"));
+      if (demo) { result.videos.push({ id: demo.id, at: demo.video!.start, label: demo.title.replace(/ \(video at [^)]*\)$| > Recorded walkthrough$/, "") }); o.ui.update({ videos: [...result.videos] }); }
+    }
     if (!visuals && onAprimo && pointing && result.topic !== "other") why(page ? "Not pointed: the AI's reply had no POINT or CIRCLE line." : "Not pointed: Wspr couldn't read this page's controls (try refreshing the tab).");
 
     if (greyedNote) { sayParts.push(greyedNote); result.say = sayParts.join(" "); say(greyedNote); }
