@@ -12,7 +12,7 @@ import { listen, micPermission, speechAvailable, type Listener } from "../voice/
 import { stopSpeaking } from "../voice/tts";
 import { Button, WispMark, cx } from "../ui/components";
 import { Intro, introReduced } from "./intro";
-import { Recorder } from "./recorder";
+import { REPLACE_KEY, Recorder } from "./recorder";
 import { Entry, openSettings } from "./shared";
 
 function App() {
@@ -68,6 +68,11 @@ function App() {
       if (Date.now() - bootAt.current < 2000) startListen(); else toggleListen();
     };
     chrome.runtime.onMessage.addListener(onMsg);
+    // Settings › Your recordings › Update: open on the Teach tab.
+    const toTeach = () => chrome.storage.session.get(REPLACE_KEY).then((r) => { if (r[REPLACE_KEY]) setTab("teach"); }).catch(() => {});
+    toTeach();
+    const onStore = (c: Record<string, chrome.storage.StorageChange>, area: string) => { if (area === "session" && c[REPLACE_KEY]?.newValue) setTab("teach"); };
+    chrome.storage.onChanged.addListener(onStore);
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") stopAll(); };
     addEventListener("keydown", onKey);
     return () => { off(); chrome.runtime.onMessage.removeListener(onMsg); removeEventListener("keydown", onKey); chrome.tabs.onActivated.removeListener(checkTab); chrome.tabs.onUpdated.removeListener(checkTab); };

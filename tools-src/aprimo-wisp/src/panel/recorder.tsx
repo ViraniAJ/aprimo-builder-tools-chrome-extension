@@ -12,9 +12,25 @@ import { Button, Progress, Toggle, inputCls } from "../ui/components";
 
 type Phase = "idle" | "recording" | "transcribing" | "review" | "saved";
 
+/** Settings › Knowledge › Your recordings › Update: the recording this one will replace when it's saved. */
+export const REPLACE_KEY = "wisp.teachReplace";
+export interface ReplaceTarget { id: string; title: string }
+
 export function Recorder() {
   const [phase, setPhase] = useState<Phase>("idle");
   const [title, setTitle] = useState("");
+  const [replacing, setReplacing] = useState<ReplaceTarget | null>(null);
+  useEffect(() => {
+    const load = () => chrome.storage.session.get(REPLACE_KEY).then((r) => {
+      const t = r[REPLACE_KEY] as ReplaceTarget | undefined;
+      if (t?.id) { setReplacing(t); setTitle(t.title); }
+    }).catch(() => {});
+    load();
+    const onChange = (c: Record<string, chrome.storage.StorageChange>, area: string) => { if (area === "session" && REPLACE_KEY in c) load(); };
+    chrome.storage.onChanged.addListener(onChange);
+    return () => chrome.storage.onChanged.removeListener(onChange);
+  }, []);
+  const stopReplacing = () => { setReplacing(null); void chrome.storage.session.remove(REPLACE_KEY).catch(() => {}); };
   const [useMic, setUseMic] = useState(true);
   const [steps, setSteps] = useState<RecipeStep[]>([]);
   const [segments, setSegments] = useState<TranscriptSegment[]>([]);
@@ -123,6 +139,12 @@ export function Recorder() {
         text: transcriptText.trim(), video: { url: `wisp-media:${id}`, segments: segs }, recipe: steps, addedAt: Date.now(),
       };
       await addDocs([doc], (p) => setProgress({ label: "Adding to Wspr's knowledge…", value: 0.2 + 0.8 * (p.done / Math.max(1, p.total)) }));
+      // An update: the new recording replaces the old one completely, so Wspr forgets the old way of doing it.
+      if (replacing) {
+        await removeDoc(replacing.id);
+        if (replacing.id.startsWith("recording:")) await deleteMedia(replacing.id.slice(10));
+        stopReplacing();
+      }
       setPhase("saved");
     } catch (e) {
       setError((e as Error).message);
@@ -140,6 +162,12 @@ export function Recorder() {
       </div>
       {error && <div className="rounded-lg border border-danger/30 bg-danger/5 px-3 py-2 text-xs text-danger">{error}</div>}
 
+      {replacing && phase !== "saved" && (
+        <div className="flex items-start gap-2 rounded-lg border border-primary/30 bg-soft px-3 py-2 text-xs text-fg">
+          <span className="flex-1">Updating <b>“{replacing.title}”</b>. When you save, this recording replaces the old one and Wspr forgets the old steps. Discard to keep the old one.</span>
+          <button className="font-medium text-primary hover:underline" onClick={() => { stopReplacing(); setTitle(""); }}>Cancel update</button>
+        </div>
+      )}
       {phase === "idle" && (
         <>
           <input className={inputCls} placeholder="What are you showing? e.g. Creating a classification" value={title} onChange={(e) => setTitle(e.target.value)} />

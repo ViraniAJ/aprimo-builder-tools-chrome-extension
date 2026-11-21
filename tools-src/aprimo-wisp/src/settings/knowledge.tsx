@@ -111,6 +111,15 @@ export function KnowledgeTab() {
                 <span className="truncate text-fg">{d.title}</span>
               </a>
               <span className="shrink-0 text-xs text-muted">{d.recipe?.length ? `${d.recipe.length} clicks` : ""}{d.recipe?.length && d.textLength ? " · " : ""}{d.textLength ? "narrated" : d.recipe?.length ? "" : "no narration or clicks"}</span>
+              <span className="shrink-0 text-xs text-muted">{d.addedAt ? new Date(d.addedAt).toLocaleDateString() : ""}</span>
+              <button className="shrink-0 rounded px-2 py-0.5 text-xs font-medium text-primary hover:bg-soft" title="Record it again; the new recording replaces this one" onClick={async () => {
+                // Opening the side panel has to follow the click straight away; the panel switches to Teach when the
+                // recording to replace is saved just after.
+                const w = (await chrome.windows.getCurrent()).id;
+                const opened = chrome.sidePanel.open({ windowId: w! });
+                await chrome.storage.session.set({ "wisp.teachReplace": { id: d.id, title: d.title } });
+                opened.then(() => setMsg(`Teach is open in the side panel: record “${d.title}” again and save to replace it.`)).catch(() => setMsg("Open Wspr's side panel (Wspr › ⋯ › Teach Wspr) to record the update; it will replace this recording."));
+              }}>Update</button>
               <button className="shrink-0 rounded px-2 py-0.5 text-xs text-muted hover:bg-danger/10 hover:text-danger" title="Delete this recording" onClick={async () => {
                 if (!confirm(`Delete the recording “${d.title}”? Wspr forgets what it learned from it, and the video is removed from this computer.`)) return;
                 await removeDoc(d.id);
