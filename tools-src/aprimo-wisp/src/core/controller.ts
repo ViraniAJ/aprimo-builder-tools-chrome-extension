@@ -212,9 +212,10 @@ export class Controller {
     const entry: ChatEntry = { id: crypto.randomUUID(), question: o.shownQuestion ?? question, typed, kind: "ai", say: "", done: false, at: Date.now(), result: {} };
     this.ui.entry(entry);
     const clipboard = /clipboard|copied/i.test(question) ? await readClipboard() : undefined;
+    const walkthrough = this.settings.guideSteps && isTask(question);
     const r = await runTurn({
       question, settings: this.settings, signal, secondOpinion: o.secondOpinion, clipboard,
-      guideText: this.settings.guideSteps && isTask(question) ? FIRST_STEP_TEXT : undefined,
+      guideText: walkthrough ? FIRST_STEP_TEXT : undefined, oneStep: walkthrough,
       ui: {
         status: (t) => { entry.status = t; this.ui.status(t); this.ui.entry({ ...entry }); },
         update: (p) => { entry.result = { ...entry.result, ...p }; if (p.say !== undefined) entry.say = p.say; this.ui.entry({ ...entry }); },
@@ -247,7 +248,7 @@ export class Controller {
     this.ui.entry(entry);
     try {
       const r = await runTurn({
-        question: "What's the next step?", settings: this.settings, signal: ctl.signal, searchText: g.goal,
+        question: "What's the next step?", settings: this.settings, signal: ctl.signal, searchText: g.goal, oneStep: true,
         guideText: requestText({ goal: g.goal, history: g.history, current: g.current, actions, clickedTarget, targetLabel: g.label }),
         ui: {
           status: (t) => { entry.status = t; this.ui.entry({ ...entry }); },

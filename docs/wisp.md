@@ -13,7 +13,7 @@ It is a browser reimplementation of [Wisp](https://github.com/ZakVir/wisp), a na
 - **Ask:**
   - Hold the mic button and talk, or type.
   - Esc stops an answer or a walkthrough.
-- **Walkthroughs:** ask "how do I…". Wspr shows the first step, watches you do it, then shows the next one. Say "what now?" at any point to move on, or ask something else to end the walkthrough.
+- **Walkthroughs:** ask "how do I…", "what are the steps to…", or just say what you want to do ("create a classification"). Wspr shows the first step, watches you do it, then shows the next one. Say "what now?" at any point to move on, or ask something else to end the walkthrough.
 - **Teach:** the panel's **Teach** tab records your screen and narration while you do something in Aprimo:
   - Whisper transcribes the narration on your computer.
   - Wspr notes every click.

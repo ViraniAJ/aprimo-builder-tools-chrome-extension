@@ -12,6 +12,7 @@ import type { CoordinateSpace } from "./catalog";
 import { isDrawRequest } from "./drawing";
 import { allowsPointing, asksBack, deniesPresence, isAboutAssistant, mentionsClipboard, sentenceNames, withoutHedge } from "./intents";
 import { systemPrompt, userText, type KnowledgeNote, type PageElement, type PageFacts, type TurnFacts } from "./prompt";
+import { capStep } from "./guide";
 import { ReplyParser, anchorOf, targetToViewport, type ReplyEvent, type Target } from "./reply-parser";
 import { stripCitations, takeSentences } from "./sentences";
 import type { WispSettings } from "./settings";
@@ -128,6 +129,8 @@ export interface TurnOptions {
   ui: TurnUI;
   signal: AbortSignal;
   guideText?: string;
+  /** A walkthrough step: say only this step (see capStep), and show only its first control. */
+  oneStep?: boolean;
   secondOpinion?: boolean;
   history?: ChatRequest["history"];
   /** Knowledge search text when it should differ from the question (walkthrough follow-ups). */
@@ -226,11 +229,16 @@ export async function runTurn(o: TurnOptions): Promise<TurnResult> {
       if (!result.pointed) { result.pointed = true; result.firstTarget = t; result.firstLabel = label; }
     };
 
+    // Walkthrough steps on the page say one step: anything past it is dropped, along with its visuals.
+    let capped = false;
+    const stepOnly = () => o.oneStep && result.topic !== "other";
     const handle = (ev: ReplyEvent) => {
+      if (capped && ev.type !== "steps" && ev.type !== "source" && ev.type !== "done" && !(ev.type === "shape" && !result.pointed)) return;
       switch (ev.type) {
         case "topic": result.topic = ev.text; o.ui.update({ topic: ev.text }); break;
         case "say-partial": {
-          const live = [...sayParts, ev.text].join(" ");
+          let live = [...sayParts, ev.text].join(" ");
+          if (stepOnly()) live = capStep(live).text;
           o.ui.update({ say: live });
           o.ui.caption(stripCitations(ev.text));
           if (s.showCaptions) agent({ kind: "wisp", op: "caption", text: stripCitations(ev.text) });
@@ -239,7 +247,16 @@ export async function runTurn(o: TurnOptions): Promise<TurnResult> {
         }
         case "say":
         case "text": {
-          const text = result.topic === "other" ? withoutHedge(ev.text) : ev.text;
+          let text = result.topic === "other" ? withoutHedge(ev.text) : ev.text;
+          if (stepOnly()) {
+            const before = sayParts.join(" ");
+            const c = capStep(before ? `${before} ${text}` : text);
+            if (c.cut) {
+              capped = true;
+              text = c.text.slice(before.length).trim();
+              if (!text) break;
+            }
+          }
           sayParts.push(text);
           result.say = sayParts.join(" ");
           o.ui.update({ say: result.say });

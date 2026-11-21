@@ -163,3 +163,21 @@ describe("drawing", () => {
     expect(nimModelsFor("where is save", "z-ai/glm-5.3-flash", [], false)).toEqual(["z-ai/glm-5.3-flash"]);
   });
 });
+
+import { capStep } from "../src/core/guide";
+
+describe("walkthroughs: one step at a time", () => {
+  it("recognises tasks however they're asked", () => {
+    for (const q of ["How do I create a classification?", "create a classification", "What are the steps to add a user?", "steps to set up a workflow", "I'm trying to upload an asset", "Can you show me where the rules are?", "set up a new user group", "please add a field to the content type", "hey, how can I share a record"])
+      expect(isTask(q), q).toBe(true);
+    for (const q of ["What is a classification?", "who are you", "what time is it", "why is this greyed out"])
+      expect(isTask(q), q).toBe(false);
+  });
+  it("keeps only the first step", () => {
+    expect(capStep("Open Content Administration in the left menu.").cut).toBe(false);
+    expect(capStep("1. Open Content Administration. 2. Click Classifications. 3. Click New.")).toEqual({ text: "Open Content Administration.", cut: true });
+    expect(capStep("Open Content Administration. Then click Classifications. Then click New and fill in the name.")).toEqual({ text: "Open Content Administration. Then click Classifications.", cut: true });
+    expect(capStep("Click Admin, then Step 2 is choosing Classifications.").text).toBe("Click Admin, then");
+    expect(capStep("Click Manage classifications.").text).toBe("Click Manage classifications.");
+  });
+});

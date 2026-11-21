@@ -8,7 +8,13 @@ export const IDLE_TIMEOUT_MS = 180_000;
 export const MAX_ACTIONS_PER_STEP = 8;
 
 const TASK_STARTS = ["how do i", "how can i", "how to", "how would i", "how should i", "how do we", "how do you", "where do i", "where can i", "help me", "walk me through", "show me how", "i want to", "i need to", "i'd like to", "can you show me how", "can you help me", "can you walk me", "teach me", "guide me", "what do i do to", "what do i click to", "how am i supposed to"];
-export const isTask = (q: string) => { const t = norm(q); return TASK_STARTS.some((p) => t.startsWith(p)); };
+const MORE_TASK_STARTS = ["what are the steps", "what's the process", "whats the process", "what is the process", "steps to", "steps for", "the steps to", "process to", "process for", "how would one", "how does one", "how can we", "how should we", "where do we", "show me where", "take me through", "can you show me", "could you show me", "please show me", "i'm trying to", "im trying to", "i am trying to", "trying to", "i want to know how", "i'd like to know how", "let's", "lets"];
+// Said as a command ("create a classification", "set up a workflow"): Wspr can't do it, so it walks them through it.
+const DO_VERBS = /^(?:please |can you |could you )?(?:create|add|set up|setup|configure|upload|edit|change|delete|remove|rename|move|share|publish|import|export|assign|build|enable|disable|turn on|turn off|update|download|archive|approve|submit|schedule|invite|duplicate|attach|tag|translate|review|find|locate|open|navigate to|go to|get to)\b/;
+export const isTask = (q: string) => {
+  const t = norm(q).replace(/^(?:(?:hey|hi|ok|okay|so|um|uh|wisp)[,!]? )+/, "");
+  return TASK_STARTS.some((p) => t.startsWith(p)) || MORE_TASK_STARTS.some((p) => t.startsWith(p)) || DO_VERBS.test(t);
+};
 
 const CONT_EXACT = new Set(["next", "ok", "okay", "done", "continue", "go on", "keep going", "and then", "then what", "now what", "what now", "what next", "whats next", "what's next", "ok what now", "okay what now", "okay now what", "ok now what", "okay next", "ok next", "got it", "next one", "what else", "i did it", "i did that", "i clicked it", "i clicked that", "it's open", "its open", "done now", "okay done", "ok done", "all right", "alright", "yep", "yes"]);
 const CONT_PREFIX = ["what's the next step", "whats the next step", "what is the next step", "what do i do now", "what do i do next", "what should i do now", "what should i do next", "next step", "okay what's next", "ok what's next", "okay what do i", "ok what do i", "i did it", "i clicked it", "i've done that", "done what's next", "done whats next", "what's after that", "what comes next", "then what do i"];
@@ -18,7 +24,25 @@ export function isContinuation(q: string): boolean {
 }
 
 export const FIRST_STEP_TEXT =
-  'If this is something they want to do on this page now, they may do it step by step while you watch. Say what to do now (you can name the steps after it in a few words) and show the first thing to use, even if it is only the menu or link that leads to the right page. Then end the reply with one more line: "STEPS: more" if there\'s more to do after this step, or "STEPS: done" if this step finishes it or it isn\'t a task to do on the page.';
+  'They want to do this in Aprimo now, one step at a time, while you watch. If it is something to do in Aprimo, give ONLY the first step, in one or two short sentences, and show where it is on this page, even if it is only the menu, card or link that leads to the right page. Do not list, number or describe the steps after it, even if the notes list them all: once they have done this step you will see the page again and give the next one. End the reply with one more line: "STEPS: more" if there is more to do after this step, or "STEPS: done" if this step finishes it. If it is not something to do in Aprimo, answer it normally and end with "STEPS: done".';
+
+/** Most sentences one walkthrough step may speak. */
+export const MAX_STEP_SENTENCES = 2;
+/**
+ * Keeps a walkthrough step to the step itself: cuts a reply that starts on the next step ("2.", "Step 2",
+ * "Secondly") and anything past the first two sentences. Models often recite every step from a help article;
+ * the walkthrough gives the next one after watching the user do this one.
+ */
+export function capStep(text: string): { text: string; cut: boolean } {
+  let t = text;
+  let cut = false;
+  const next = t.search(/(?:^|\s)(?:2[.)]\s|step (?:2|two)\b|secondly\b)/i);
+  if (next > 0) { t = t.slice(0, next).trim(); cut = true; }
+  const sentences = t.match(/[^.!?]+(?:[.!?]+["')\]]*|$)/g)?.filter((x) => x.trim()) ?? [t];
+  if (sentences.length > MAX_STEP_SENTENCES) { t = sentences.slice(0, MAX_STEP_SENTENCES).join("").trim(); cut = true; }
+  t = t.replace(/(?:^|\s)1[.)]\s+/, " ").trim(); // a leftover "1." from a numbered list
+  return { text: t, cut };
+}
 
 export type GuideAction =
   | { kind: "click-target"; label?: string }
