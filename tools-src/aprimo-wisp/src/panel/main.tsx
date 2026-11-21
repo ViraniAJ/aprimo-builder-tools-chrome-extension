@@ -56,6 +56,7 @@ function App() {
         caption: setCaption,
         guide: (active, t) => setGuide({ active, text: t }),
         settings: setSettings,
+        reset: () => { setEntries([]); setCaption(""); setGuide({ active: false }); },
       });
       off = onSettingsChanged(async () => { const n = await loadSettings(); setSettings(n); ctrl.current?.setSettings(n); });
       // Opened by the header button or the shortcut a moment ago: play the intro, then start listening.
@@ -132,6 +133,11 @@ function App() {
         <div className="flex self-stretch">
           {(["ask", "teach"] as const).map((t) => <button key={t} onClick={() => setTab(t)} className={cx("wisp-label border-b-2 px-3 !text-[13px]", tab === t ? "border-primary text-primary" : "border-transparent text-muted hover:text-fg")}>{t === "ask" ? "Ask" : "Teach"}</button>)}
         </div>
+        {entries.length > 0 && (
+          <button title="New chat (Wspr forgets this conversation)" aria-label="New chat" onClick={() => ctrl.current?.newChat()} className="flex h-9 w-9 items-center justify-center rounded-full text-black/60 hover:bg-black/[.04]">
+            <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M20 2H4a2 2 0 0 0-2 2v18l4-4h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2Zm0 14H5.2L4 17.2V4h16v12Zm-9-1h2v-3h3v-2h-3V7h-2v3H8v2h3v3Z"/></svg>
+          </button>
+        )}
         <button title="Settings" onClick={() => openSettings()} className="flex h-9 w-9 items-center justify-center rounded-full text-black/60 hover:bg-black/[.04]">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94a7.5 7.5 0 0 0 .05-.94 7.5 7.5 0 0 0-.05-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7 7 0 0 0-1.62-.94l-.36-2.54A.5.5 0 0 0 13.9 2h-3.8a.5.5 0 0 0-.49.42l-.36 2.54a7 7 0 0 0-1.62.94l-2.39-.96a.5.5 0 0 0-.6.22L2.72 8.48a.5.5 0 0 0 .12.64l2.03 1.58a7.5 7.5 0 0 0 0 1.88l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .6.22l2.39-.96c.5.38 1.04.7 1.62.94l.36 2.54a.5.5 0 0 0 .49.42h3.8a.5.5 0 0 0 .49-.42l.36-2.54a7 7 0 0 0 1.62-.94l2.39.96a.5.5 0 0 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64zM12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></svg>
         </button>

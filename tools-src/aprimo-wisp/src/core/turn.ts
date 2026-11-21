@@ -167,9 +167,9 @@ export async function runTurn(o: TurnOptions): Promise<TurnResult> {
     const facts: TurnFacts = {
       question: o.question, page, image, notes, answerLength: s.answerLength, instructions: s.instructions, local,
       readControls: s.readPageControls || !image, clipboard: o.clipboard && mentionsClipboard(o.question) ? o.clipboard : undefined,
-      guideText: o.guideText, aboutAssistant,
+      guideText: o.guideText, aboutAssistant, followUp: !!o.history?.length,
     };
-    return { system: systemPrompt(local, sp, !!image), user: userText(facts), images: image ? [shot!.img] : [], maxTokens: local ? 400 : 700, history: o.history };
+    return { system: systemPrompt(local, sp, !!image), user: userText(facts), images: image ? [shot!.img] : [], maxTokens: local ? 400 : 700, history: local ? o.history?.slice(-6) : o.history };
   };
 
   const stillThinking = setTimeout(() => { if (!result.say) { o.ui.caption("Still thinking…"); agent({ kind: "wisp", op: "caption", text: "Still thinking…", final: true }); } }, 6000);

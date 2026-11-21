@@ -56,7 +56,8 @@ export interface TurnFacts {
   clipboard?: string;
   guideText?: string;
   aboutAssistant?: boolean;
-  history?: { question: string; answer: string }[];
+  /** Earlier messages of this conversation come before this one. */
+  followUp?: boolean;
 }
 
 const COORDS: Record<CoordinateSpace, string> = {
@@ -191,6 +192,7 @@ export function userText(f: TurnFacts, limits = { elements: 120, notes: 6, noteC
   if (f.clipboard) lines.push(`The text they copied (on their clipboard): "${f.clipboard.slice(0, 1200)}"`);
   if (f.guideText) lines.push(f.guideText);
   if (f.aboutAssistant) lines.push("This question is about you, Aprimo Wspr, not about anything on the page.");
+  if (f.followUp) lines.push("The earlier messages are this conversation so far: use them to understand follow-ups (\"the other one\", \"that\", \"and then?\") and don't repeat what you already said unless they ask. The page may have changed since: for what's on screen now, trust this screenshot and control list over earlier answers.");
   lines.push(`The user asked: "${f.question.trim()}"`);
   return lines.join("\n");
 }

@@ -5,6 +5,7 @@ import { complete } from "../providers";
 import type { AgentEvent, AgentRequest } from "../shared/messages";
 import { earcon, speak, stopSpeaking, untilQuiet } from "../voice/tts";
 import { builtInShape, isFreeSketch, parseStroke, placeShape, placeSketch, shapeSpokenName, shapeStrokes, sketchSubject, SKETCH_SYSTEM, type Pt } from "./drawing";
+import { Conversation, isNewChat } from "./conversation";
 import { FIRST_STEP_TEXT, GUIDE_CAPTIONS, isContinuation, isTask, requestText, shouldEndGuide, shouldStartGuide, type GuideAction, type GuideStepRecord, actionsText } from "./guide";
 import {
   HISTORY_CAPACITY, RECENT_CAPACITY, cleanedWriting, historyTitle, isSummaryRequest, isWritingHelp, noteCommand, recall, runNoteCommand,
@@ -39,6 +40,8 @@ export interface ControllerUI {
   caption(text: string): void;
   guide(active: boolean, text?: string): void;
   settings(s: WispSettings): void;
+  /** "New chat": the conversation was cleared. */
+  reset?(): void;
 }
 
 interface Guide { goal: string; history: GuideStepRecord[]; current: string; target?: TurnResult["firstTarget"]; label?: string; turn: string; steps: number; busy: boolean }
@@ -51,6 +54,7 @@ export class Controller {
   private lastQuestion = "";
   private readingRest: string | undefined;
   private guideState: Guide | null = null;
+  private convo = new Conversation();
 
   constructor(settings: WispSettings, ui: ControllerUI) {
     this.settings = settings;
@@ -79,8 +83,9 @@ export class Controller {
     speak(text, { voiceName: this.settings.voiceName || undefined, rate: this.settings.rate, volume: this.settings.volume });
   }
 
-  private remember(question: string, answer: string, typed: boolean, page?: string) {
+  private remember(question: string, answer: string, typed: boolean, page?: string, topic?: string) {
     if (!answer.trim()) return;
+    this.convo.add({ question, answer, page, topic });
     this.recent = [{ question, sentences: answer, at: Date.now() }, ...this.recent].slice(0, RECENT_CAPACITY);
     void this.addHistory({ id: crypto.randomUUID(), at: Date.now(), question, answer, page, typed });
   }
@@ -112,6 +117,9 @@ export class Controller {
     }
     if (this.settings.showHeard && !typed) this.ui.caption(`“${historyTitle(question, 80)}”`);
 
+    // "New chat" / "start over": forget the conversation so far.
+    if (isNewChat(question)) { this.newChat(); return; }
+
     // Mid-walkthrough: "what now?" asks for the next step; anything else ends it.
     if (this.guideState) {
       if (isContinuation(question)) { void this.nextStep([], false, question); return; }
@@ -129,6 +137,7 @@ export class Controller {
     // 2. Retry with a second opinion.
     if (isRetry(question) && this.lastQuestion) {
       this.ui.caption("Taking another look…");
+      this.convo.dropLast(this.lastQuestion); // re-ask without the answer they rejected
       return this.aiTurn(this.lastQuestion, typed, signal, { secondOpinion: true, shownQuestion: question });
     }
     // 3. Writing help, when text is selected on the page.
@@ -213,8 +222,9 @@ export class Controller {
     this.ui.entry(entry);
     const clipboard = /clipboard|copied/i.test(question) ? await readClipboard() : undefined;
     const walkthrough = this.settings.guideSteps && isTask(question);
+    const history = await this.convo.messages(this.settings.provider === "local");
     const r = await runTurn({
-      question, settings: this.settings, signal, secondOpinion: o.secondOpinion, clipboard,
+      question, settings: this.settings, signal, secondOpinion: o.secondOpinion, clipboard, history,
       guideText: walkthrough ? FIRST_STEP_TEXT : undefined, oneStep: walkthrough,
       ui: {
         status: (t) => { entry.status = t; this.ui.status(t); this.ui.entry({ ...entry }); },
@@ -227,7 +237,7 @@ export class Controller {
     entry.result = r;
     entry.status = "";
     this.ui.entry({ ...entry });
-    this.remember(entry.question, r.say, typed, r.pageTitle);
+    this.remember(question, r.say, typed, r.pageTitle, r.topic);
     if (!r.error && shouldStartGuide({ guideSteps: this.settings.guideSteps, question, steps: r.stepsMore, pointed: r.pointed })) {
       this.guideState = { goal: question, history: [], current: r.say, target: r.firstTarget, label: r.firstLabel, turn: r.id, steps: 1, busy: false };
       this.ui.guide(true, r.say);
@@ -247,8 +257,9 @@ export class Controller {
     const entry: ChatEntry = { id: crypto.randomUUID(), question: typedQuestion ?? "What's the next step?", typed: true, kind: "guide", say: "", done: false, at: Date.now(), result: {} };
     this.ui.entry(entry);
     try {
+      const history = await this.convo.messages(this.settings.provider === "local");
       const r = await runTurn({
-        question: "What's the next step?", settings: this.settings, signal: ctl.signal, searchText: g.goal, oneStep: true,
+        question: "What's the next step?", settings: this.settings, signal: ctl.signal, searchText: g.goal, oneStep: true, history,
         guideText: requestText({ goal: g.goal, history: g.history, current: g.current, actions, clickedTarget, targetLabel: g.label }),
         ui: {
           status: (t) => { entry.status = t; this.ui.entry({ ...entry }); },
@@ -257,6 +268,7 @@ export class Controller {
         },
       });
       entry.done = true; entry.say = r.say; entry.result = r; entry.status = "";
+      if (!r.error) this.convo.add({ question: typedQuestion ?? "What's the next step?", answer: r.say, page: r.pageTitle, topic: r.topic });
       if (this.guideState !== g) { this.ui.entry({ ...entry }); return; }
       g.history.push({ said: g.current, did: actionsText(actions) });
       if (r.error) {
@@ -284,6 +296,20 @@ export class Controller {
       if ((e as Error).name !== "AbortError") this.ui.caption(GUIDE_CAPTIONS.lost);
       this.endGuide();
     }
+  }
+
+  /** Forget the conversation so far: the next question starts fresh. */
+  newChat() {
+    this.abort?.abort();
+    this.abort = null;
+    stopSpeaking();
+    this.endGuide();
+    this.convo.clear();
+    this.lastQuestion = "";
+    this.readingRest = undefined;
+    this.ui.reset?.();
+    this.ui.caption("New chat.");
+    this.speak("Okay, starting fresh.");
   }
 
   endGuide() {
