@@ -44,7 +44,8 @@ export interface ControllerUI {
   reset?(): void;
 }
 
-interface Guide { goal: string; history: GuideStepRecord[]; current: string; target?: TurnResult["firstTarget"]; label?: string; turn: string; steps: number; busy: boolean }
+interface Guide { goal: string; history: GuideStepRecord[]; current: string; target?: TurnResult["firstTarget"]; label?: string; turn: string; steps: number; busy: boolean; tabId?: number; at?: number }
+const GUIDE_KEY = "wisp.guide";
 
 export class Controller {
   settings: WispSettings;
@@ -60,6 +61,27 @@ export class Controller {
     this.settings = settings;
     this.ui = ui;
     chrome.runtime.onMessage.addListener((m: AgentEvent) => { if (m?.kind === "wisp-event") this.onAgent(m); });
+    // A full page load mid-walkthrough replaces the page agent (and its watcher): take a fresh look at the new page.
+    chrome.tabs.onUpdated.addListener((tabId, info) => {
+      const g = this.guideState;
+      if (g && info.status === "complete" && tabId === g.tabId && !g.busy) setTimeout(() => { if (this.guideState === g) void this.nextStep([{ kind: "page-changed", route: "" }], false); }, 1200);
+    });
+  }
+
+  /** The walkthrough is saved for this browser session, so the on-page bar can carry on after a page reload. */
+  private saveGuide() {
+    const g = this.guideState;
+    void chrome.storage.session.set({ [GUIDE_KEY]: g ? { ...g, busy: false, at: Date.now() } : null }).catch(() => {});
+  }
+
+  /** Picks up a walkthrough that was running in this tab before the page reloaded. */
+  async resumeSavedGuide(tabId: number | undefined) {
+    if (!tabId || this.guideState) return;
+    const g = (await chrome.storage.session.get(GUIDE_KEY).catch(() => ({})) as any)[GUIDE_KEY] as Guide | null;
+    if (!g || g.tabId !== tabId || Date.now() - (g.at ?? 0) > 300_000) return;
+    this.guideState = { ...g, busy: false };
+    this.ui.guide(true, g.current);
+    setTimeout(() => { if (this.guideState?.turn === g.turn) void this.nextStep([{ kind: "page-changed", route: "" }], false); }, 1200);
   }
 
   setSettings(s: WispSettings) { this.settings = s; }
@@ -120,16 +142,26 @@ export class Controller {
     // "New chat" / "start over": forget the conversation so far.
     if (isNewChat(question)) { this.newChat(); return; }
 
-    // Mid-walkthrough: "what now?" asks for the next step; anything else ends it.
+    // Mid-walkthrough: "what now?" asks for the next step; a new task ends it; any other question ("where is it?",
+    // "what does this do?") is answered and the walkthrough carries on watching the same step.
+    let resumeGuide: Guide | null = null;
     if (this.guideState) {
       if (isContinuation(question)) { void this.nextStep([], false, question); return; }
-      this.endGuide();
+      if (isTask(question)) this.endGuide();
+      else { resumeGuide = this.guideState; this.guideState = null; }
     }
     this.abort?.abort();
     const ctl = new AbortController();
     this.abort = ctl;
     try { await this.process(question, typed, ctl.signal); }
     catch (e) { if ((e as Error).name !== "AbortError") { console.warn("[wisp]", e); this.local(question, typed, "Sorry, something went wrong. Try again."); } }
+    // Back to the walkthrough: watch the same step again (unless the answer started a new one).
+    if (resumeGuide && !this.guideState && !ctl.signal.aborted) {
+      this.guideState = { ...resumeGuide, busy: false };
+      this.saveGuide();
+      this.ui.guide(true, resumeGuide.current);
+      void this.agent({ kind: "wisp", op: "watch", turn: resumeGuide.turn, target: resumeGuide.target, label: resumeGuide.label });
+    }
   }
 
   private async process(question: string, typed: boolean, signal: AbortSignal) {
@@ -239,7 +271,8 @@ export class Controller {
     this.ui.entry({ ...entry });
     this.remember(question, r.say, typed, r.pageTitle, r.topic);
     if (!r.error && shouldStartGuide({ guideSteps: this.settings.guideSteps, question, steps: r.stepsMore, pointed: r.pointed })) {
-      this.guideState = { goal: question, history: [], current: r.say, target: r.firstTarget, label: r.firstLabel, turn: r.id, steps: 1, busy: false };
+      this.guideState = { goal: question, history: [], current: r.say, target: r.firstTarget, label: r.firstLabel, turn: r.id, steps: 1, busy: false, tabId: (await activeTab())?.id };
+      this.saveGuide();
       this.ui.guide(true, r.say);
       void this.agent({ kind: "wisp", op: "watch", turn: r.id, target: r.firstTarget, label: r.firstLabel, caption: GUIDE_CAPTIONS.start });
       if (this.settings.showCaptions) this.ui.caption(GUIDE_CAPTIONS.start);
@@ -290,6 +323,7 @@ export class Controller {
       g.label = r.firstLabel;
       g.turn = r.id;
       g.busy = false;
+      this.saveGuide();
       this.ui.guide(true, r.say);
       void this.agent({ kind: "wisp", op: "watch", turn: r.id, target: r.firstTarget, label: r.firstLabel });
     } catch (e) {
@@ -315,6 +349,7 @@ export class Controller {
   endGuide() {
     if (!this.guideState) return;
     this.guideState = null;
+    this.saveGuide();
     this.ui.guide(false);
     void this.agent({ kind: "wisp", op: "watch-stop" });
   }

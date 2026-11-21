@@ -4,7 +4,7 @@
 import { norm } from "./intents";
 
 export const MAX_STEPS = 12;
-export const IDLE_TIMEOUT_MS = 180_000;
+export const IDLE_TIMEOUT_MS = 300_000;
 export const MAX_ACTIONS_PER_STEP = 8;
 
 const TASK_STARTS = ["how do i", "how can i", "how to", "how would i", "how should i", "how do we", "how do you", "where do i", "where can i", "help me", "walk me through", "show me how", "i want to", "i need to", "i'd like to", "can you show me how", "can you help me", "can you walk me", "teach me", "guide me", "what do i do to", "what do i click to", "how am i supposed to"];
@@ -100,7 +100,9 @@ export function shouldStartGuide(o: { guideSteps: boolean; question: string; ste
 }
 /** Should it end after a step answer? (STEPS done, or no STEPS line and nothing shown, or the step limit.) */
 export function shouldEndGuide(o: { steps?: boolean; pointed: boolean; stepCount: number }): boolean {
-  return o.steps === false || (o.steps === undefined && !o.pointed) || o.stepCount >= MAX_STEPS;
+  // Only an explicit "STEPS: done" (or the step limit) ends it. A step without a STEPS line or a point usually
+  // means the next control isn't on screen yet (a page still loading), so keep watching.
+  return o.steps === false || o.stepCount >= MAX_STEPS;
 }
 
 export const GUIDE_CAPTIONS = {

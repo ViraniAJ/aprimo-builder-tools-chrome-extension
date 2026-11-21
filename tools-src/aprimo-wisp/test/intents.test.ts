@@ -131,7 +131,7 @@ describe("guide", () => {
     expect(shouldStartGuide({ guideSteps: true, question: "how do I add a field", steps: false, pointed: true })).toBe(false);
     expect(shouldStartGuide({ guideSteps: false, question: "how do I add a field", steps: true, pointed: true })).toBe(false);
     expect(shouldEndGuide({ steps: false, pointed: true, stepCount: 1 })).toBe(true);
-    expect(shouldEndGuide({ steps: undefined, pointed: false, stepCount: 1 })).toBe(true);
+    expect(shouldEndGuide({ steps: undefined, pointed: false, stepCount: 1 })).toBe(false); // the next control may still be loading: keep watching
     expect(shouldEndGuide({ steps: true, pointed: true, stepCount: 12 })).toBe(true);
   });
   it("describes what the user did", () => {

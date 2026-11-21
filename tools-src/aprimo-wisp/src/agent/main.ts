@@ -125,7 +125,7 @@ import { cleanSelection, describe, lastPointer, mask, snapshot } from "./snapsho
   function bumpIdle() {
     if (!watch) return;
     clearTimeout(watch.idle);
-    watch.idle = setTimeout(() => endWatch("idle"), 180_000);
+    watch.idle = setTimeout(() => endWatch("idle"), 300_000);
   }
   function stopWatch() {
     if (!watch) return;
