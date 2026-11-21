@@ -79,7 +79,7 @@ svg.marks{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
 .caption.bottom{left:50%!important;top:auto!important;bottom:28px;transform:translateX(-50%)}
 .caption.on{opacity:1}
 .caption.partial{color:rgba(255,255,255,.7)}
-.chip{position:absolute;top:16px;right:16px;max-width:360px;background:#fff;color:rgba(0,0,0,.87);border-radius:4px;padding:12px 16px;box-shadow:0 5px 5px -3px rgba(0,0,0,.2),0 8px 10px 1px rgba(0,0,0,.14),0 3px 14px 2px rgba(0,0,0,.12);pointer-events:auto}
+.chip{position:absolute;bottom:24px;right:24px;max-width:340px;background:#fff;color:rgba(0,0,0,.87);border-radius:4px;padding:12px 16px;box-shadow:0 5px 5px -3px rgba(0,0,0,.2),0 8px 10px 1px rgba(0,0,0,.14),0 3px 14px 2px rgba(0,0,0,.12);pointer-events:auto}
 .chip .n{font-size:12px;font-weight:500;color:var(--a);text-transform:uppercase;letter-spacing:1.25px}
 .chip .t{margin:6px 0 10px;font-size:14px}
 .chip button{font:inherit;font-size:13px;font-weight:500;letter-spacing:1.25px;text-transform:uppercase;border:0;background:transparent;color:var(--a);border-radius:4px;padding:5px 10px;margin-right:4px;cursor:pointer}

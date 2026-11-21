@@ -1,7 +1,9 @@
 // Wisp's QuestionIntent and the visual-decision helpers, ported regex for regex (WispCore/Assistant/QuestionIntent.swift,
 // VisualDecision.swift). Everything runs on the lowercased question with ’ turned into '.
 
-export const norm = (q: string) => q.toLowerCase().replace(/[’‘]/g, "'").trim();
+export const norm = (q: string) => q.toLowerCase().replace(/[’‘]/g, "'").trim()
+  // Addressing it by name ("hey whisper, …", "…, wspr") matches the same commands as before the rename.
+  .replace(/^(hey |hi |ok |okay )?(?:whisper|wspr)\b/, "$1wisp").replace(/,? (?:whisper|wspr)([?.!]*)$/, " wisp$1");
 /** Lowercase and trim whitespace plus punctuation. */
 export const normP = (q: string) => norm(q).replace(/^[\s\p{P}]+|[\s\p{P}]+$/gu, "");
 
@@ -74,9 +76,9 @@ export const CAPABILITIES_SAY =
   "I answer questions about the Aprimo page you're on and point to the right spot, step by step if you like. I know Aprimo's help and developer docs, and anything you've taught me. I can also read text aloud, help with writing, do math and conversions, set timers, and keep notes.";
 
 export const CAPABILITIES_CARD = {
-  title: "What Aprimo Wisp can do",
+  title: "What Aprimo Wspr can do",
   lines: [
-    "Ask about the page: “how do I create a classification?” (Wisp points; click along for the next step)",
+    "Ask about the page: “how do I create a classification?” (Wspr points; click along for the next step)",
     "Aprimo knowledge: “what's the difference between a record and a file version?”, “how do I call the search API?”",
     "Read aloud: “read this to me” (with text selected), “read this page to me”, “read what I copied”",
     "Writing: “make this more polite”, “fix the grammar”, “summarize this page” (with text selected)",

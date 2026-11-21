@@ -14,7 +14,7 @@ const side = document.getElementById("side")!;
   const m = await getMedia(id);
   if (!m) { title.textContent = "This recording isn't in this browser."; return; }
   title.textContent = m.title;
-  document.title = `${m.title} · Aprimo Wisp`;
+  document.title = `${m.title} · Aprimo Wspr`;
   video.src = URL.createObjectURL(m.blob);
   video.addEventListener("loadedmetadata", () => { video.currentTime = Math.min(t, video.duration || t); video.play().catch(() => {}); }, { once: true });
   const db = await openDB();

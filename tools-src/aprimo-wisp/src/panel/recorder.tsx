@@ -120,7 +120,7 @@ export function Recorder() {
         id: `recording:${id}`, source: "recording", title: name, url: `wisp-media:${id}`,
         text: transcriptText.trim(), video: { url: `wisp-media:${id}`, segments: segs }, recipe: steps, addedAt: Date.now(),
       };
-      await addDocs([doc], (p) => setProgress({ label: "Adding to Wisp's knowledge…", value: 0.2 + 0.8 * (p.done / Math.max(1, p.total)) }));
+      await addDocs([doc], (p) => setProgress({ label: "Adding to Wspr's knowledge…", value: 0.2 + 0.8 * (p.done / Math.max(1, p.total)) }));
       setPhase("saved");
     } catch (e) {
       setError((e as Error).message);
@@ -133,8 +133,8 @@ export function Recorder() {
   return (
     <div className="flex-1 space-y-3 overflow-y-auto p-3 text-sm">
       <div>
-        <div className="font-semibold">Teach Wisp a feature</div>
-        <p className="text-xs text-muted">Record yourself doing it in Aprimo and talk it through. Wisp transcribes the narration on this computer, notes each click, and keeps the video so it can point people to it later. Nothing is uploaded.</p>
+        <div className="font-semibold">Teach Wspr a feature</div>
+        <p className="text-xs text-muted">Record yourself doing it in Aprimo and talk it through. Wspr transcribes the narration on this computer, notes each click, and keeps the video so it can point people to it later. Nothing is uploaded.</p>
       </div>
       {error && <div className="rounded-lg border border-danger/30 bg-danger/5 px-3 py-2 text-xs text-danger">{error}</div>}
 
@@ -163,16 +163,16 @@ export function Recorder() {
           {blob.current && <video className="w-full rounded-lg border border-line" src={URL.createObjectURL(blob.current)} controls />}
           <div className="text-xs font-semibold">What you said</div>
           <textarea className={inputCls + " min-h-32"} value={transcriptText} onChange={(e) => setTranscriptText(e.target.value)} placeholder="Type what the recording shows if there's no narration." />
-          <div className="text-xs font-semibold">Clicks Wisp noted ({steps.length})</div>
+          <div className="text-xs font-semibold">Clicks Wspr noted ({steps.length})</div>
           <Steps steps={steps} onRemove={(i) => setSteps((s) => s.filter((_, j) => j !== i))} />
           {progress && <Progress value={progress.value} />}
-          <div className="flex gap-2"><Button kind="primary" onClick={save} disabled={!transcriptText.trim() && !steps.length}>Save to Wisp's knowledge</Button><Button kind="ghost" onClick={reset}>Discard</Button></div>
+          <div className="flex gap-2"><Button kind="primary" onClick={save} disabled={!transcriptText.trim() && !steps.length}>Save to Wspr's knowledge</Button><Button kind="ghost" onClick={reset}>Discard</Button></div>
         </div>
       )}
 
       {phase === "saved" && (
         <div className="space-y-2">
-          <div className="rounded-lg border border-ok/40 bg-ok/5 px-3 py-2 text-xs">Saved. Wisp will use “{title || "Recorded walkthrough"}” when someone asks about it, and can offer the video.</div>
+          <div className="rounded-lg border border-ok/40 bg-ok/5 px-3 py-2 text-xs">Saved. Wspr will use “{title || "Recorded walkthrough"}” when someone asks about it, and can offer the video.</div>
           <Button onClick={reset}>Record another</Button>
         </div>
       )}

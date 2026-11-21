@@ -97,7 +97,7 @@ export function AITab({ s, update, locked }: TabProps) {
 
       <Section title="About you">
         <Field label="Answer length"><Segmented value={s.answerLength} disabled={locked("answerLength")} onChange={(v) => update({ answerLength: v })} options={[{ value: "short", label: "Short" }, { value: "normal", label: "Normal" }, { value: "detailed", label: "Detailed" }]} /></Field>
-        <Field label="Instructions" help={<>Tell Wisp about yourself or how you like answers. It's sent with every question. {s.instructions.length}/{MAX_INSTRUCTIONS}</>} locked={locked("instructions")}>
+        <Field label="Instructions" help={<>Tell Wspr about yourself or how you like answers. It's sent with every question. {s.instructions.length}/{MAX_INSTRUCTIONS}</>} locked={locked("instructions")}>
           <textarea className={inputCls + " min-h-20"} maxLength={MAX_INSTRUCTIONS} value={s.instructions} placeholder="For example: I'm new to Aprimo, so explain simply." onChange={(e) => update({ instructions: e.target.value })} />
           <div className="mt-1 flex flex-wrap gap-1">{EXAMPLES.map((x) => <button key={x} className="rounded-full border border-line px-2 py-0.5 text-xs hover:bg-soft" onClick={() => update({ instructions: `${s.instructions}${s.instructions ? " " : ""}${x}`.slice(0, MAX_INSTRUCTIONS) })}>{x}</button>)}</div>
         </Field>
@@ -158,7 +158,7 @@ function OfflineModel({ s, update }: TabProps) {
   };
   return (
     <Section title="Offline model">
-      <p className="text-sm text-muted">A small model that runs on this computer's graphics chip. It answers from Wisp's Aprimo knowledge and the page's controls when there's no key or no network. It can't see screenshots.</p>
+      <p className="text-sm text-muted">A small model that runs on this computer's graphics chip. It answers from Wspr's Aprimo knowledge and the page's controls when there's no key or no network. It can't see screenshots.</p>
       {gpu && !gpu.ok ? <div className="mt-2 text-sm text-danger">Not available here: {gpu.reason}</div> : (
         <>
           <Field label="Model"><Select value={model} onChange={(v) => update({ providers: { ...s.providers, local: { ...s.providers.local, model: v } } })} options={LOCAL_MODELS.map((m) => ({ value: m.id, label: `${m.displayName}${cached[m.id] ? " – downloaded" : ""}` }))} /></Field>

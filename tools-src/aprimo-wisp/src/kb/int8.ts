@@ -35,7 +35,7 @@ export function encodeIndex(rows: { q: Int8Array; scale: number }[], dims: numbe
 export function decodeIndex(bytes: ArrayBuffer): { count: number; dims: number; mat: Int8Array; scales: Float32Array } {
   const view = new DataView(bytes);
   const magic = String.fromCharCode(view.getUint8(0), view.getUint8(1), view.getUint8(2), view.getUint8(3));
-  if (magic !== "WKB1") throw new Error("Not a Wisp knowledge index.");
+  if (magic !== "WKB1") throw new Error("Not a Wspr knowledge index.");
   const count = view.getUint32(4, true);
   const dims = view.getUint32(8, true);
   const mat = new Int8Array(bytes, 12, count * dims);

@@ -70,7 +70,7 @@ function App() {
     if (listener.current) return;
     setMicError("");
     if (!speechAvailable()) { setMicError("Speech recognition isn't available in this browser. Type your question instead."); return; }
-    if ((await micPermission()) !== "granted") { setMicError("Wisp needs the microphone once."); return; }
+    if ((await micPermission()) !== "granted") { setMicError("Wspr needs the microphone once."); return; }
     stopSpeaking();
     ctrl.current?.earcon("start");
     setListening(true);
@@ -101,7 +101,7 @@ function App() {
       <header className="flex h-14 items-center gap-2 border-b border-line bg-white px-3">
         <WispMark />
         <div className="min-w-0 flex-1">
-          <div className="text-[16px] font-medium leading-tight">Aprimo Wisp</div>
+          <div className="text-[16px] font-medium leading-tight">Aprimo Wspr</div>
           <button className="truncate text-xs text-muted hover:text-fg" title="Change the AI" onClick={() => openSettings("#ai")}>{p.displayName} · {modelName}</button>
         </div>
         <div className="flex self-stretch">
@@ -115,8 +115,8 @@ function App() {
       {!settings.privacyAccepted && settings.provider !== "local" && (
         <div className="m-3 rounded-lg bg-[rgb(229,246,253)] p-3 text-sm text-[rgb(1,67,97)]">
           <div className="font-medium">Before you start</div>
-          <p className="mt-1">When you ask, Wisp sends your question, a screenshot of the Aprimo tab and its list of controls to {p.displayName}. Nothing is stored by Wisp outside your browser.</p>
-          <div className="mt-2"><Button kind="primary" onClick={() => openSettings("#welcome")}>Set up Wisp</Button></div>
+          <p className="mt-1">When you ask, Wspr sends your question, a screenshot of the Aprimo tab and its list of controls to {p.displayName}. Nothing is stored by Wspr outside your browser.</p>
+          <div className="mt-2"><Button kind="primary" onClick={() => openSettings("#welcome")}>Set up Wspr</Button></div>
         </div>
       )}
 
@@ -132,7 +132,7 @@ function App() {
           {guide.active && (
             <div className="mx-3 mb-2 flex items-center gap-2 rounded-lg border border-line bg-white px-3 py-2 text-xs">
               <span className="h-2 w-2 shrink-0 rounded-full bg-primary wisp-pulse" />
-              <span className="flex-1">Watching you do the step. Click where Wisp points; it shows the next one.</span>
+              <span className="flex-1">Watching you do the step. Click where Wspr points; it shows the next one.</span>
               <Button small onClick={() => ctrl.current?.ask("what's the next step", true)}>Next</Button>
               <Button small kind="ghost" onClick={() => ctrl.current?.endGuide()}>Stop</Button>
             </div>
@@ -176,7 +176,7 @@ function Empty({ onAprimo, onAsk }: { onAprimo: boolean; onAsk: (q: string) => v
     <div className="mt-6 text-center">
       <div className="wisp-tile mx-auto mb-3 h-12 w-12"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" /></svg></div>
       <div className="text-[18px] font-medium">Ask anything about Aprimo</div>
-      <p className="mx-auto mt-1 max-w-xs text-xs text-muted">{onAprimo ? "Wisp sees this Aprimo page and points to the right spot." : "Open an Aprimo tab and Wisp can point at things on the page too."}</p>
+      <p className="mx-auto mt-1 max-w-xs text-xs text-muted">{onAprimo ? "Wspr sees this Aprimo page and points to the right spot." : "Open an Aprimo tab and Wspr can point at things on the page too."}</p>
       <div className="mt-4 flex flex-col items-center gap-2">
         {examples.map((q) => <button key={q} onClick={() => onAsk(q)} className="rounded-full border border-primary/50 bg-white px-3 py-1 text-[13px] text-primary hover:bg-soft">{q}</button>)}
       </div>

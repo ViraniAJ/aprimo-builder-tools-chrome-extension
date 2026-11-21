@@ -47,7 +47,7 @@ function App() {
   return (
     <div className="flex min-h-screen bg-page">
       <nav className="w-56 shrink-0 border-r border-line bg-white px-2 py-4">
-        <div className="mb-4 flex items-center gap-2 px-3"><WispMark size={24} /><span className="text-[14px] font-medium">Aprimo Wisp</span></div>
+        <div className="mb-4 flex items-center gap-2 px-3"><WispMark size={24} /><span className="text-[14px] font-medium">Aprimo Wspr</span></div>
         {TABS.map(([id, label]) => (
           <button key={id} onClick={() => setTab(id)} className={cx("mb-0.5 block h-9 w-full rounded-[6px] pl-3 pr-2 text-left text-[14px] font-medium tracking-[0.25px]", tab === id ? "bg-soft text-primary" : "text-fg hover:bg-black/[.04]")}>{label}</button>
         ))}
@@ -55,7 +55,7 @@ function App() {
       <main className="min-w-0 max-w-4xl flex-1 px-6 py-5">
         <div className="mb-4 flex items-center justify-between gap-4">
           <h1 className="text-[28px] font-normal">{TABS.find(([id]) => id === tab)?.[1]}</h1>
-          <Button kind="primary" onClick={openPanel}>Open Wisp panel</Button>
+          <Button kind="primary" onClick={openPanel}>Open Wspr panel</Button>
         </div>
         {!!warnings.length && <div className="mb-3 rounded-lg border border-danger/30 bg-danger/5 p-2 text-xs text-danger">Some saved settings were invalid and were ignored: {warnings.join(", ")}.</div>}
         {tab === "general" && <General {...props} replay={() => setTab("welcome")} />}
@@ -77,7 +77,7 @@ async function openPanel() {
     const win = await chrome.windows.getCurrent();
     await chrome.sidePanel.open({ windowId: win.id! });
   } catch {
-    alert("Click the Aprimo Wisp icon or press Alt+Shift+Space to open the panel.");
+    alert("Click the Aprimo Wspr icon or press Alt+Shift+Space to open the panel.");
   }
 }
 
@@ -87,9 +87,9 @@ function General({ s, update, locked, replay }: TabProps & { replay: () => void 
     <>
       <Section title="Asking">
         <p className="mb-2 text-sm">Open the panel and hold the mic, or press <kbd className="rounded border border-line px-1">Alt</kbd>+<kbd className="rounded border border-line px-1">Shift</kbd>+<kbd className="rounded border border-line px-1">Space</kbd> to start and again to stop. You can change the keys at <code>chrome://extensions/shortcuts</code>.</p>
-        <Toggle checked={s.guideSteps} locked={locked("guideSteps")} onChange={(v) => update({ guideSteps: v })} label="Guide me step by step" help="After a how-to answer, click where Wisp points and it shows the next step." />
-        <Toggle checked={s.allowWebActions} locked={locked("allowWebActions")} onChange={(v) => update({ allowWebActions: v })} label="Let Wisp open websites for you" help="Light help only: open a site or search the web or a site in a new tab. Wisp never clicks or types in Aprimo." />
-        <Toggle checked={s.readPageControls} locked={locked("readPageControls")} onChange={(v) => update({ readPageControls: v })} label="Better answers" help="Send the page's list of controls (names, positions, state) with each question. Wisp points far more accurately." />
+        <Toggle checked={s.guideSteps} locked={locked("guideSteps")} onChange={(v) => update({ guideSteps: v })} label="Guide me step by step" help="After a how-to answer, click where Wspr points and it shows the next step." />
+        <Toggle checked={s.allowWebActions} locked={locked("allowWebActions")} onChange={(v) => update({ allowWebActions: v })} label="Let Wspr open websites for you" help="Light help only: open a site or search the web or a site in a new tab. Wspr never clicks or types in Aprimo." />
+        <Toggle checked={s.readPageControls} locked={locked("readPageControls")} onChange={(v) => update({ readPageControls: v })} label="Better answers" help="Send the page's list of controls (names, positions, state) with each question. Wspr points far more accurately." />
       </Section>
       <Section title="Settings file">
         <div className="flex flex-wrap gap-2">
@@ -97,7 +97,7 @@ function General({ s, update, locked, replay }: TabProps & { replay: () => void 
           <label className="inline-flex cursor-pointer items-center rounded-lg border border-line bg-card px-3 py-1.5 text-sm hover:bg-soft">Import…
             <input type="file" accept="application/json" hidden onChange={async (e) => { const f = e.target.files?.[0]; if (!f) return; try { await importSettings(await f.text()); setMsg("Imported."); } catch (err) { setMsg((err as Error).message); } }} />
           </label>
-          <Button kind="danger" onClick={async () => { if (confirm("Reset every Wisp setting to its default? Keys and knowledge stay.")) { await resetSettings(); setMsg("Reset."); } }}>Reset to defaults</Button>
+          <Button kind="danger" onClick={async () => { if (confirm("Reset every Wspr setting to its default? Keys and knowledge stay.")) { await resetSettings(); setMsg("Reset."); } }}>Reset to defaults</Button>
           <Button kind="ghost" onClick={replay}>Replay Welcome…</Button>
         </div>
         <p className="mt-2 text-xs text-muted">Exports never include AI keys. {msg}</p>
@@ -115,7 +115,7 @@ function VoiceTab({ s, update, locked }: TabProps) {
         <Field label="Voice" locked={locked("voiceName")}>
           <div className="flex gap-2">
             <Select value={s.voiceName} disabled={locked("voiceName")} onChange={(v) => update({ voiceName: v })} options={[{ value: "", label: "Browser default" }, ...vs.map((v) => ({ value: v.name, label: `${v.name}${v.lang ? `, ${v.lang}` : ""}${v.remote ? " (online)" : ""}` }))]} />
-            <Button onClick={() => { stopSpeaking(); speak("Hi, I'm Aprimo Wisp. Ask me anything about Aprimo.", { voiceName: s.voiceName || undefined, rate: s.rate, volume: s.volume }); }}>Preview</Button>
+            <Button onClick={() => { stopSpeaking(); speak("Hi, I'm Aprimo Wspr. Ask me anything about Aprimo.", { voiceName: s.voiceName || undefined, rate: s.rate, volume: s.volume }); }}>Preview</Button>
           </div>
         </Field>
         <Field label="Speed" locked={locked("rate")}><Range value={s.rate} min={0.7} max={1.4} step={0.05} format={(v) => `${v.toFixed(2)}×`} disabled={locked("rate")} onChange={(v) => update({ rate: v })} /></Field>
@@ -126,7 +126,7 @@ function VoiceTab({ s, update, locked }: TabProps) {
         <Toggle checked={s.showCaptions || !s.speak} disabled={!s.speak} locked={locked("showCaptions")} onChange={(v) => update({ showCaptions: v })} label="Show captions on the page" />
         <Field label="Caption size"><Segmented value={s.captionSize} onChange={(v) => update({ captionSize: v })} options={[{ value: "small", label: "Small" }, { value: "medium", label: "Medium" }, { value: "large", label: "Large" }]} /></Field>
         <Field label="Caption position"><Segmented value={s.captionPosition} onChange={(v) => update({ captionPosition: v })} options={[{ value: "pointer", label: "Next to the pointer" }, { value: "bottom", label: "Bottom of the page" }]} /></Field>
-        <Toggle checked={s.showHeard} onChange={(v) => update({ showHeard: v })} label="Show what Wisp heard" />
+        <Toggle checked={s.showHeard} onChange={(v) => update({ showHeard: v })} label="Show what Wspr heard" />
         <Toggle checked={s.earcons} onChange={(v) => update({ earcons: v })} label="Play listening sounds" />
       </Section>
     </>
@@ -138,7 +138,7 @@ function Companion({ s, update, locked }: TabProps) {
   return (
     <>
       <Section title="Theme">
-        <p className="mb-3 text-xs text-muted">The cursor Wisp moves on the Aprimo page to show you things.</p>
+        <p className="mb-3 text-xs text-muted">The cursor Wspr moves on the Aprimo page to show you things.</p>
         <div className="grid grid-cols-4 gap-3 sm:grid-cols-7">
           {Object.entries(THEMES).map(([id, t]) => (
             <button key={id} disabled={locked("cursorTheme")} onClick={() => look({ cursorTheme: id })} className="text-center text-xs">
@@ -166,13 +166,13 @@ function Privacy({ s, update, locked }: TabProps) {
     <>
       <Section title="What leaves your computer">
         <ul className="list-disc space-y-1 pl-5 text-sm">
-          <li>Only when you ask: your question, a screenshot of the Aprimo tab (if allowed below), the page's list of controls, and the few knowledge passages that match, go to the AI provider you chose. Wisp keeps none of it on a server.</li>
+          <li>Only when you ask: your question, a screenshot of the Aprimo tab (if allowed below), the page's list of controls, and the few knowledge passages that match, go to the AI provider you chose. Wspr keeps none of it on a server.</li>
           <li>The offline model, the knowledge index, speech transcription for recordings, notes, timers and history all stay in this browser.</li>
           <li>Speech recognition for the mic uses Chrome's built-in service.</li>
           <li>Passwords, tokens and input values on the page are never read; text that looks like a key is masked.</li>
           <li>No analytics.</li>
         </ul>
-        <div className="mt-3"><Toggle checked={s.privacyAccepted} onChange={(v) => update({ privacyAccepted: v })} label="I understand: let Wisp ask the cloud AI" help="Without this, Wisp only uses the offline model." /></div>
+        <div className="mt-3"><Toggle checked={s.privacyAccepted} onChange={(v) => update({ privacyAccepted: v })} label="I understand: let Wspr ask the cloud AI" help="Without this, Wspr only uses the offline model." /></div>
       </Section>
       <Section title="Screen">
         <Toggle checked={s.sendScreenshots} locked={locked("sendScreenshots")} onChange={(v) => update({ sendScreenshots: v })} label="Send a screenshot of the Aprimo tab with each question" help="Turn off to send only the page's list of controls." />
@@ -190,7 +190,7 @@ function About() {
   const m = chrome.runtime.getManifest();
   return (
     <Section title="About">
-      <p className="text-sm">Aprimo Wisp {m.version}: a browser take on Wisp, the push-to-talk Mac helper, specialised for Aprimo and built into Aprimo Builder Tools.</p>
+      <p className="text-sm">Aprimo Wspr {m.version}: a browser take on Wisp, the push-to-talk Mac helper, specialised for Aprimo and built into Aprimo Builder Tools.</p>
       <p className="mt-2 text-sm text-muted">What carries over from the Mac app: the reply format and pointing, the race between NVIDIA models, step-by-step guidance, the local skills (math, conversions, time, timers, notes, reading aloud, writing help, drawing), history, captions, themes and the settings file. What doesn't: things only macOS allows (opening Mac apps, menu-bar commands, Mac facts, the system dictionary, the Kokoro voice). See docs/wisp.md.</p>
       <p className="mt-2 text-sm text-muted">Knowledge: developers.aprimo.com (bundled), Aprimo Help (indexed with your sign-in), and anything you add.</p>
       <div className="mt-3"><Button onClick={() => { const d = defaultSettings(); navigator.clipboard.writeText(JSON.stringify({ version: m.version, defaults: { provider: d.provider } })); }}>Copy version info</Button></div>

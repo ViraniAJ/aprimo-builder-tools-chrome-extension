@@ -14,7 +14,8 @@ export function speak(text: string, opts: { voiceName?: string; rate?: number; v
   queued++;
   let done = false;
   const finish = () => { if (!done) { done = true; queued = Math.max(0, queued - 1); opts.onEnd?.(); } };
-  chrome.tts.speak(text, {
+  // "Wspr" is said "whisper"; without this, voices spell it out.
+  chrome.tts.speak(text.replace(/\bWspr\b/gi, "Whisper"), {
     enqueue: true,
     rate: opts.rate ?? 1,
     volume: opts.volume ?? 1,

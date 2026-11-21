@@ -193,7 +193,7 @@ export async function exportSettings(): Promise<string> {
 export async function importSettings(json: string): Promise<void> {
   const parsed = JSON.parse(json);
   const layer = parsed?.settings ?? parsed;
-  if (!isObj(layer)) throw new Error("That file doesn't hold Wisp settings.");
+  if (!isObj(layer)) throw new Error("That file doesn't hold Wspr settings.");
   await saveSettings(mergeSettings(layer));
 }
 

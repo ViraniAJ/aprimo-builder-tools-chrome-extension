@@ -81,7 +81,7 @@ import { cleanSelection, describe, lastPointer, mask, snapshot } from "./snapsho
     const o = ov();
     o.holdShapes = true;
     if (caption) o.setCaption(caption);
-    o.setChip({ label: "Wisp is watching", text: "Do the step; Wisp will show the next one. Esc stops.", last: false, onStop: () => endWatch("button") });
+    o.setChip({ label: "Wspr is watching", text: "Do the step; Wspr will show the next one. Esc stops.", last: false, onStop: () => endWatch("button") });
     bumpIdle();
   }
   function bumpIdle() {
@@ -227,7 +227,7 @@ import { cleanSelection, describe, lastPointer, mask, snapshot } from "./snapsho
       case "watch": startWatch(msg.turn, msg.target, msg.label, msg.caption); sendResponse({ ok: true }); return;
       case "watch-stop": stopWatch(); sendResponse({ ok: true }); return;
       case "page-text": sendResponse({ ...pageText(msg.max), pointer: lastPointer(), title: document.title }); return;
-      case "record-start": recording = true; recordStart = Date.now(); ov().setCaption("Wisp is recording your clicks…", true); sendResponse({ ok: true, title: document.title, route: location.hash }); return;
+      case "record-start": recording = true; recordStart = Date.now(); ov().setCaption("Wspr is recording your clicks…", true); sendResponse({ ok: true, title: document.title, route: location.hash }); return;
       case "record-stop": recording = false; ov().setCaption(""); sendResponse({ ok: true }); return;
       case "navigate": if (/^#\//.test(msg.route)) location.hash = msg.route; sendResponse({ ok: true }); return;
     }
@@ -255,24 +255,34 @@ import { cleanSelection, describe, lastPointer, mask, snapshot } from "./snapsho
     if (document.getElementById(BUTTON_ID)) return;
     const help = findHelp();
     if (!help?.parentElement) return;
+    // Aprimo's header styles its buttons through the wrapper element (Angular's _ngcontent/_nghost attributes and
+    // classes), so copy those onto ours and match Help's measured size; otherwise the row's spacing shifts.
+    const wrap = document.createElement("span");
+    wrap.id = BUTTON_ID;
+    for (const at of [...help.attributes]) if (at.name === "class" || at.name.startsWith("_ng")) wrap.setAttribute(at.name, at.value);
+    const hs = getComputedStyle(help);
+    wrap.style.cssText = `display:${hs.display === "inline" ? "inline-flex" : hs.display};align-items:center;justify-content:center;flex:0 0 auto;align-self:center;margin:${hs.margin}`;
+    const inner = help.querySelector("button") ?? help;
+    const r = inner.getBoundingClientRect();
+    const size = Math.round(r.height >= 24 && r.height <= 56 ? r.height : 40);
     const b = document.createElement("button");
-    b.id = BUTTON_ID;
     b.type = "button";
-    b.title = "Ask Aprimo Wisp (Alt+Shift+Space)";
-    b.setAttribute("aria-label", "Ask Aprimo Wisp");
-    b.style.cssText = "width:48px;height:48px;border:0;border-radius:50%;background:transparent;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0;margin:0;vertical-align:middle;transition:background-color .15s";
+    b.title = "Ask Aprimo Wspr (Alt+Shift+Space)";
+    b.setAttribute("aria-label", "Ask Aprimo Wspr");
+    b.style.cssText = `width:${size}px;height:${size}px;min-width:0;border:0;border-radius:50%;background:transparent;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0;margin:0;box-sizing:border-box;transition:background-color .15s`;
     b.addEventListener("mouseenter", () => { b.style.background = "rgba(0,0,0,.04)"; });
     b.addEventListener("mouseleave", () => { b.style.background = "transparent"; });
     // A small teal cursor: the same shape and colour as the companion that points on the page.
-    b.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 2.5 L5 19.5 L9.4 15.3 L12.4 21.8 L15.2 20.6 L12.3 14.2 L18.6 14 Z" fill="#008080" stroke="#008080" stroke-width="1.2" stroke-linejoin="round"/></svg>';
+    b.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 2.5 L5 19.5 L9.4 15.3 L12.4 21.8 L15.2 20.6 L12.3 14.2 L18.6 14 Z" fill="#008080" stroke="#008080" stroke-width="1.2" stroke-linejoin="round"/></svg>';
     b.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopPropagation();
       chrome.runtime.sendMessage({ kind: "wisp-open", talk: true }).then((r) => {
-        if (!r?.ok) ov().setCaption("Press Alt+Shift+Space to open Aprimo Wisp.");
-      }).catch(() => ov().setCaption("Press Alt+Shift+Space to open Aprimo Wisp."));
+        if (!r?.ok) ov().setCaption("Press Alt+Shift+Space to open Aprimo Wspr.");
+      }).catch(() => ov().setCaption("Press Alt+Shift+Space to open Aprimo Wspr."));
     });
-    help.parentElement.insertBefore(b, help);
+    wrap.appendChild(b);
+    help.parentElement.insertBefore(wrap, help);
   }
   placeButton();
   setInterval(placeButton, 1500);

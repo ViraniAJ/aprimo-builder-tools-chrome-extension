@@ -35,9 +35,9 @@ export interface ProviderInfo {
 const noThinking = { chat_template_kwargs: { enable_thinking: false } };
 
 export const NIM_MODELS: ModelInfo[] = [
-  { id: "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning", displayName: "Nemotron 3 Nano Omni", coordinateSpace: "normalized1000", extraBody: noThinking, note: "Fastest (about 1 s); Wisp's fallback." },
+  { id: "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning", displayName: "Nemotron 3 Nano Omni", coordinateSpace: "normalized1000", extraBody: noThinking, note: "Fastest (about 1 s); the usual fallback." },
   { id: "stepfun-ai/step-5-preview", displayName: "Step 5 Preview", extraBody: { reasoning_effort: "low" }, note: "Best for drawings." },
-  { id: "nvidia/nemotron-3.5-super-vl-120b-a12b", displayName: "Nemotron 3.5 Super VL", extraBody: noThinking, note: "Wisp's default: most accurate pointing (about 2 s)." },
+  { id: "nvidia/nemotron-3.5-super-vl-120b-a12b", displayName: "Nemotron 3.5 Super VL", extraBody: noThinking, note: "The default: most accurate pointing (about 2 s)." },
   { id: "z-ai/glm-5.3-flash", displayName: "GLM 5.3 Flash", note: "Accurate, but slow (about 11 seconds)." },
   { id: "deepseek-ai/deepseek-v4.1-flash", displayName: "DeepSeek V4.1 Flash", extraBody: { chat_template_kwargs: { thinking: false } } },
   { id: "meta/muse-glimmer-30b", displayName: "Muse Glimmer 30B", coordinateSpace: "normalized1000" },

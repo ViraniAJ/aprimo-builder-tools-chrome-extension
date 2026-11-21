@@ -42,7 +42,7 @@ export function KnowledgeTab() {
     const kept = docsIn.length - fresh.length;
     const docsWord = (n: number) => `${n} document${n === 1 ? "" : "s"}`;
     if (!fresh.length) { setBusy(null); setMsg(`All ${docsWord(docsIn.length)} were already up to date.`); refresh(); return; }
-    setBusy({ label: `Adding ${docsWord(fresh.length)} to Wisp's knowledge…`, value: 0 });
+    setBusy({ label: `Adding ${docsWord(fresh.length)} to Wspr's knowledge…`, value: 0 });
     await addDocs(fresh, (p) => setBusy({ label: `${label}: indexing ${p.done}/${p.total} documents…`, value: p.done / Math.max(1, p.total) }));
     setBusy(null);
     setMsg(`Added ${docsWord(fresh.length)}${kept ? `; ${docsWord(kept)} were already up to date` : ""}.`);
@@ -51,7 +51,7 @@ export function KnowledgeTab() {
 
   const runCrawl = async (o: { start: string; source: KnowledgeSource; maxPages: number; maxDepth: number; withCredentials?: boolean; prefixes?: string[] }) => {
     setMsg("");
-    if (!(await hostPermission(o.start))) { setMsg("Wisp needs permission to read that site."); return; }
+    if (!(await hostPermission(o.start))) { setMsg("Wspr needs permission to read that site."); return; }
     const ctl = new AbortController();
     setBusy({ label: "Starting…", value: 0, cancel: () => ctl.abort() });
     try {
@@ -67,7 +67,7 @@ export function KnowledgeTab() {
 
   return (
     <>
-      <Section title="What Wisp knows">
+      <Section title="What Wspr knows">
         {stats ? (
           <ul className="space-y-1 text-sm">
             <li>Built in: Aprimo developer documentation and the DAM API reference, {stats.bundled.count.toLocaleString()} passages{stats.bundled.builtAt ? ` (built ${new Date(stats.bundled.builtAt).toLocaleDateString()})` : ""}.</li>
@@ -85,7 +85,7 @@ export function KnowledgeTab() {
       </Section>
 
       <Section title="Aprimo Help">
-        <p className="text-sm text-muted">help.aprimo.com asks you to sign in to Aprimo, so it can't be bundled. Sign in there in this browser, then index it here: Wisp reads it with your session and keeps the text only in this browser.</p>
+        <p className="text-sm text-muted">help.aprimo.com asks you to sign in to Aprimo, so it can't be bundled. Sign in there in this browser, then index it here: Wspr reads it with your session and keeps the text only in this browser.</p>
         <div className="mt-2 flex gap-2">
           <Button onClick={() => chrome.tabs.create({ url: HELP_CENTER })}>Open Aprimo Help</Button>
           <Button kind="primary" disabled={!!busy} onClick={() => runCrawl({ start: HELP_CENTER, source: "help", maxPages: 600, maxDepth: 6, withCredentials: true, prefixes: ["https://help.aprimo.com/"] })}>Index Aprimo Help</Button>
@@ -112,7 +112,7 @@ export function KnowledgeTab() {
               <a className="min-w-0 flex-1 truncate" href={d.video ? videoLink(d.url) : d.url} target="_blank" rel="noreferrer" title={d.url}>{d.title}</a>
               <span className="shrink-0 text-xs text-muted">{d.chunks ?? ""}</span>
               <button className="text-muted hover:text-danger" title="Remove" onClick={async () => {
-                if (!confirm(`Remove “${d.title}” from Wisp's knowledge?`)) return;
+                if (!confirm(`Remove “${d.title}” from Wspr's knowledge?`)) return;
                 await removeDoc(d.id);
                 if (String(d.url).startsWith("wisp-media:")) await deleteMedia(String(d.url).slice(11));
                 refresh();
@@ -165,7 +165,7 @@ function AddSources({ busy, onCrawl, onDocs, setMsg }: { busy: boolean; onCrawl:
         <textarea className={inputCls + " min-h-16"} value={urls} placeholder={"https://…\nhttps://…"} onChange={(e) => setUrls(e.target.value)} />
         <div className="mt-1"><Button disabled={busy || !urls.trim()} onClick={addUrls}>Add pages</Button></div>
       </Field>
-      <Field label="Upload files" help="Markdown, text, HTML, PDF, captions (.vtt, .srt), or a Wisp knowledge pack (.wisp.json).">
+      <Field label="Upload files" help="Markdown, text, HTML, PDF, captions (.vtt, .srt), or a Wspr knowledge pack (.wisp.json).">
         <input ref={fileRef} type="file" multiple accept=".md,.markdown,.txt,.html,.htm,.pdf,.vtt,.srt,.json" className="text-sm" onChange={async (e) => {
           const files = [...(e.target.files ?? [])];
           const out: KnowledgeDoc[] = [];
@@ -174,7 +174,7 @@ function AddSources({ busy, onCrawl, onDocs, setMsg }: { busy: boolean; onCrawl:
           if (fileRef.current) fileRef.current.value = "";
         }} />
       </Field>
-      <Field label="Link a video demo" help="Paste the video's captions (WebVTT or SRT) so Wisp can find the right moment and link to it. YouTube: ⋯ › Show transcript, or download the captions file.">
+      <Field label="Link a video demo" help="Paste the video's captions (WebVTT or SRT) so Wspr can find the right moment and link to it. YouTube: ⋯ › Show transcript, or download the captions file.">
         <div className="space-y-2">
           <div className="flex gap-2">
             <input className={inputCls} placeholder="Title, e.g. Setting up a rule" value={vTitle} onChange={(e) => setVTitle(e.target.value)} />
@@ -186,7 +186,7 @@ function AddSources({ busy, onCrawl, onDocs, setMsg }: { busy: boolean; onCrawl:
           }}>Add video</Button>
         </div>
       </Field>
-      <p className="text-xs text-muted">To teach Wisp a feature by showing it, use the Teach tab in the Wisp panel: record your screen while you talk it through.</p>
+      <p className="text-xs text-muted">To teach Wspr a feature by showing it, use the Teach tab in the Wspr panel: record your screen while you talk it through.</p>
     </Section>
   );
 }

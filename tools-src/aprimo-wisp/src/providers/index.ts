@@ -32,17 +32,17 @@ export function spokenError(e: unknown): string {
   const m = String(err?.message ?? e);
   if (err?.name === "AbortError") return "";
   switch ((err as ProviderError).kind) {
-    case "noKey": return "I need a key for my AI first. Open Wisp settings, choose AI, and paste it in.";
-    case "privacy": return "Open Wisp settings and read what leaves your computer first. Then I can ask the AI.";
-    case "noModel": return "Choose an AI model in Wisp settings, under AI.";
-    case "badURL": return "Something is wrong with Wisp's AI settings. Open Wisp settings, choose AI, and pick your provider again.";
+    case "noKey": return "I need a key for my AI first. Open Wspr settings, choose AI, and paste it in.";
+    case "privacy": return "Open Wspr settings and read what leaves your computer first. Then I can ask the AI.";
+    case "noModel": return "Choose an AI model in Wspr settings, under AI.";
+    case "badURL": return "Something is wrong with Wspr's AI settings. Open Wspr settings, choose AI, and pick your provider again.";
     case "degenerate": return "I got a garbled answer. Try asking again.";
     case "timeout": return "That's taking too long. Try asking again.";
     case "network": return "I lost the connection. Check your internet and try again.";
   }
   const status = (err as ProviderError).status ?? 0;
-  if (status === 401 || status === 403) return "The AI service didn't accept your key. Open Wisp settings, choose AI, and paste a new one.";
-  if (status === 404) return "The AI service doesn't know that model. Open Wisp settings, choose AI, and check the model.";
+  if (status === 401 || status === 403) return "The AI service didn't accept your key. Open Wspr settings, choose AI, and paste a new one.";
+  if (status === 404) return "The AI service doesn't know that model. Open Wspr settings, choose AI, and check the model.";
   if (status === 429) return "The AI service is busy right now. Try again in a moment.";
   if (status >= 400) return "The AI service had a problem. Try again in a moment.";
   if (/failed to fetch|networkerror|load failed/i.test(m)) return "I lost the connection. Check your internet and try again.";

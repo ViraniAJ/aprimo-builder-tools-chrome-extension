@@ -36,7 +36,7 @@ export function listen(opts: { lang?: string; onPartial: (t: string) => void; on
   };
   rec.onerror = (e: any) => {
     if (e.error === "no-speech" || e.error === "aborted") return;
-    opts.onError(e.error === "not-allowed" ? "Microphone blocked: open Wisp settings and allow the microphone." : `Speech recognition: ${e.error}`);
+    opts.onError(e.error === "not-allowed" ? "Microphone blocked: open Wspr settings and allow the microphone." : `Speech recognition: ${e.error}`);
   };
   rec.onend = () => { if (ended) return; ended = true; clearTimeout(silence); opts.onFinal((finalText + " " + interim).trim()); };
   rec.start();

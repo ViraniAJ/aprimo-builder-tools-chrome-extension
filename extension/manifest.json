@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Aprimo Builder Tools",
   "version": "0.11.0",
-  "description": "External builder tools inside Aprimo: Rules Manager, Job Log Search, Bulk Versioning and Aprimo Wisp (an AI guide that answers, speaks and points), using your own Aprimo sign-in.",
+  "description": "External builder tools inside Aprimo: Rules Manager, Job Log Search, Bulk Versioning and Aprimo Wspr (an AI guide that answers, speaks and points), using your own Aprimo sign-in.",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqMP5taoR9ZSOqJOkrZk7BPxFndAE1MtfuvCnBKgDE7t1FPi2eYrlONL4x6yyYLzpt0B/JK0rOnFqyoHsbI1PbQeym5Ue8ZmubDBSF++Mo/oMSFmz77FrEH7emJTxftkHKaMk9FwD4LK31caGhOTpAHOQJNiFuxBrHSmCXcj7ga77qgOjBjWerwzlpUvzBUaJJ6i6QFcGGy/+javgrAj+rwNIdo69//wj+rK5LGoHNfNqwmMZ4+Le03sbifkNVUgyrUcCO2koMUekDJQ3hiU2T8T4vyU1/mJBw3MCD1ISbJsivUeDZgeux1EFqyhuXSNSfR+x5rx8dZZjjpybbtdjnQIDAQAB",
   "minimum_chrome_version": "116",
   "permissions": [
@@ -110,7 +110,7 @@
         "default": "Alt+Shift+Space",
         "mac": "Alt+Shift+Space"
       },
-      "description": "Ask Aprimo Wisp (press again to stop listening)"
+      "description": "Ask Aprimo Wspr (press again to stop listening)"
     }
   },
   "storage": {

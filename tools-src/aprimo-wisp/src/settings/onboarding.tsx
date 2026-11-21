@@ -22,16 +22,16 @@ export function Onboarding({ s, update, done }: TabProps & { done: () => void })
     <div className="flex min-h-screen flex-col justify-center bg-page p-6"><div className="mx-auto w-full max-w-xl">
       <div className="rounded-lg border border-line bg-white p-8">
         {step === "welcome" && (
-          <Body title="Meet Aprimo Wisp" sub="Ask anything about Aprimo, out loud or typed. Wisp answers in a friendly voice, and when it's about the page you're on, it shows you where to click.">
+          <Body title="Meet Aprimo Wspr" sub="Ask anything about Aprimo, out loud or typed. Wspr answers in a friendly voice, and when it's about the page you're on, it shows you where to click.">
             <div className="flex justify-center py-6"><WispMark size={72} /></div>
           </Body>
         )}
         {step === "privacy" && (
           <Body title="What leaves your computer" sub="Plainly, before you turn anything on.">
             <ul className="list-disc space-y-1.5 pl-5 text-sm">
-              <li>Wisp listens only while you hold the mic or after you press the shortcut.</li>
+              <li>Wspr listens only while you hold the mic or after you press the shortcut.</li>
               <li>When you ask, it takes a screenshot of the Aprimo tab and lists the page's controls.</li>
-              <li>Those, with your question, go to {PROVIDERS[s.provider].displayName} to answer. Wisp keeps nothing on a server.</li>
+              <li>Those, with your question, go to {PROVIDERS[s.provider].displayName} to answer. Wspr keeps nothing on a server.</li>
               <li>Speech recognition uses Chrome's built-in service; voices are your browser's.</li>
               <li>Your knowledge, recordings, notes and history stay in this browser. No analytics.</li>
             </ul>
@@ -40,22 +40,22 @@ export function Onboarding({ s, update, done }: TabProps & { done: () => void })
         {step === "ai" && <AIStep s={s} update={update} />}
         {step === "microphone" && <MicStep />}
         {step === "shortcut" && (
-          <Body title="Your shortcut" sub="Press Alt+Shift+Space to open Wisp and start listening; press it again when you're done. Or hold the mic button in the panel.">
+          <Body title="Your shortcut" sub="Press Alt+Shift+Space to open Wspr and start listening; press it again when you're done. Or hold the mic button in the panel.">
             <Button onClick={() => chrome.tabs.create({ url: "chrome://extensions/shortcuts" })}>Change the shortcut…</Button>
           </Body>
         )}
         {step === "tryIt" && (
-          <Body title="Try it out" sub="Open an Aprimo tab, open the Wisp panel, and ask something real.">
+          <Body title="Try it out" sub="Open an Aprimo tab, open the Wspr panel, and ask something real.">
             <ol className="list-decimal space-y-1.5 pl-5 text-sm">
-              <li>Press Alt+Shift+Space, or click the Wisp icon and hold the mic.</li>
+              <li>Press Alt+Shift+Space, or click the Wspr icon and hold the mic.</li>
               <li>Ask, for example: “What can you do?”, “How do I create a classification?”, “What's 15% of 80?”</li>
-              <li>Let go. Wisp answers out loud with captions, and points when it's about the page.</li>
+              <li>Let go. Wspr answers out loud with captions, and points when it's about the page.</li>
             </ol>
             <p className="mt-3 text-xs text-muted">To stop an answer, press Esc or the Stop button.</p>
           </Body>
         )}
         {step === "done" && (
-          <Body title="You're all set" sub="Ask “how do I…” and click each step as Wisp shows it. Add your own articles, sites and recordings under Settings › Knowledge.">
+          <Body title="You're all set" sub="Ask “how do I…” and click each step as Wspr shows it. Add your own articles, sites and recordings under Settings › Knowledge.">
             <div />
           </Body>
         )}
@@ -64,7 +64,7 @@ export function Onboarding({ s, update, done }: TabProps & { done: () => void })
           {step === "welcome" && <Button kind="primary" onClick={next}>Get Started</Button>}
           {step === "privacy" && <Button kind="primary" onClick={() => { update({ privacyAccepted: true }); next(); }}>I Understand</Button>}
           {["ai", "microphone", "shortcut", "tryIt"].includes(step) && <Button kind="primary" onClick={next}>Continue</Button>}
-          {step === "done" && <Button kind="primary" onClick={() => { try { localStorage.removeItem("wisp.onboarding.step"); } catch { /* ignore */ } done(); }}>Start Using Wisp</Button>}
+          {step === "done" && <Button kind="primary" onClick={() => { try { localStorage.removeItem("wisp.onboarding.step"); } catch { /* ignore */ } done(); }}>Start Using Wspr</Button>}
         </div>
       </div>
     </div>
@@ -83,7 +83,7 @@ function AIStep({ s, update }: Pick<TabProps, "s" | "update">) {
   const id = s.provider;
   useEffect(() => { getKey(id).then((k) => setHas(!!k)); }, [id]);
   return (
-    <Body title="Connect Wisp's AI" sub={id === "nvidia-nim" ? "Wisp uses a free NVIDIA account to understand your questions and the page. It takes about a minute." : "Use the provider you picked; you can change it any time in Settings › AI."}>
+    <Body title="Connect Wspr's AI" sub={id === "nvidia-nim" ? "Wspr uses a free NVIDIA account to understand your questions and the page. It takes about a minute." : "Use the provider you picked; you can change it any time in Settings › AI."}>
       <Select value={id} onChange={(v: ProviderId) => update({ provider: v })} options={(["nvidia-nim", "anthropic", "openai-compatible", "local"] as ProviderId[]).map((k) => ({ value: k, label: PROVIDERS[k].displayName }))} />
       {id !== "local" && id !== "openai-compatible" && (
         <div className="mt-4 space-y-2 text-sm">
@@ -109,7 +109,7 @@ function MicStep() {
   const [state, setState] = useState<string>("unknown");
   useEffect(() => { micPermission().then(setState); const t = setInterval(() => micPermission().then(setState), 1500); return () => clearInterval(t); }, []);
   return (
-    <Body title="Let Wisp hear you" sub="Wisp listens only while you hold the mic or after you press the shortcut. Chrome shows a recording dot whenever the microphone is on.">
+    <Body title="Let Wspr hear you" sub="Wspr listens only while you hold the mic or after you press the shortcut. Chrome shows a recording dot whenever the microphone is on.">
       {state === "granted" ? <div className="text-ok">Microphone allowed.</div> : <Button kind="primary" onClick={() => chrome.tabs.create({ url: chrome.runtime.getURL("app/wisp/mic-permission.html") })}>Allow the microphone…</Button>}
       <p className="mt-2 text-xs text-muted">You can skip this and type your questions.</p>
     </Body>

@@ -5,7 +5,7 @@ async function ask() {
   try {
     const s = await navigator.mediaDevices.getUserMedia({ audio: true });
     s.getTracks().forEach((t) => t.stop());
-    statusEl.textContent = "Done. You can close this tab and talk to Wisp.";
+    statusEl.textContent = "Done. You can close this tab and talk to Wspr.";
     btn.hidden = true;
     setTimeout(() => window.close(), 1500);
   } catch (e) {

@@ -105,7 +105,7 @@ export function parseLine(line: string): ReplyEvent | null {
     case "TOPIC": {
       // Wisp: screen | you | other ("wisp" means you); anything else is screen if it starts with "screen".
       const w = rest.toLowerCase().replace(/^[^a-z]+|[^a-z]+$/g, "");
-      const topic = w === "wisp" ? "you" : ["screen", "you", "other"].includes(w) ? w : w.startsWith("screen") ? "screen" : rest ? (/^[a-z]+$/.test(w) ? "other" : rest) : "other";
+      const topic = w === "wisp" || w === "wspr" ? "you" : ["screen", "you", "other"].includes(w) ? w : w.startsWith("screen") ? "screen" : rest ? (/^[a-z]+$/.test(w) ? "other" : rest) : "other";
       return { type: "topic", text: topic };
     }
     case "SAY":

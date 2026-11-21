@@ -6,7 +6,7 @@ import { ProviderError, type ChatRequest, type StreamOptions, type TextStream } 
 export interface AnthropicConfig { baseURL: string; apiKey: string; model: string }
 
 export async function* streamAnthropic(cfg: AnthropicConfig, req: ChatRequest, opts: StreamOptions = {}): TextStream {
-  if (!cfg.apiKey) throw new ProviderError("Add an Anthropic API key in Wisp settings.");
+  if (!cfg.apiKey) throw new ProviderError("Add an Anthropic API key in Wspr settings.");
   const content: unknown[] = req.images.map((img) => ({ type: "image", source: { type: "base64", media_type: img.mediaType, data: img.base64 } }));
   content.push({ type: "text", text: req.user });
   const body = {

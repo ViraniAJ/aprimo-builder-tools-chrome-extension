@@ -122,7 +122,7 @@ the tooltip on the menu section and its items). Old Rules Manager links
   checked on ps1 that this accepts the DAM-tab token. The tool's colour variables are prefixed `--bv-` so they never
   clash with the extension's own.
 
-- **Aprimo Wisp** (`app/wisp/settings.html`, side panel `app/wisp/panel.html`): an AI guide. Ask by voice
+- **Aprimo Wspr** (`app/wisp/settings.html`, side panel `app/wisp/panel.html`): an AI guide. Ask by voice
   (Alt+Shift+Space or the mic) or by typing. Wisp answers out loud with captions, points at the right control on the
   Aprimo page, and walks you through a task one step at a time while you click along. It knows developers.aprimo.com
   (bundled), Aprimo Help (indexed with your sign-in), and anything you add: sites, pages, files, video demos with

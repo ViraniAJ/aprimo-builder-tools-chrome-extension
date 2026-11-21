@@ -6,7 +6,7 @@ import { ProviderError, type ChatRequest, type StreamOptions, type TextStream } 
 export interface OpenAICompatConfig { baseURL: string; apiKey: string; model: string; extraBody?: Record<string, unknown> }
 
 export async function* streamOpenAICompat(cfg: OpenAICompatConfig, req: ChatRequest, opts: StreamOptions = {}): TextStream {
-  if (!cfg.model) throw new ProviderError("Choose a model for this provider in Wisp settings.");
+  if (!cfg.model) throw new ProviderError("Choose a model for this provider in Wspr settings.");
   const content: unknown[] = [{ type: "text", text: req.user }];
   for (const img of req.images) content.push({ type: "image_url", image_url: { url: `data:${img.mediaType};base64,${img.base64}` } });
   const body: Record<string, unknown> = {

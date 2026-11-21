@@ -24,7 +24,7 @@
       subtitle: 'Search and filter DAM maintenance jobs (System → Jobs) by status, type, creator and date.' },
     { id: 'bulk-versioning', label: 'Bulk Versioning', page: 'app/bulk.html',
       subtitle: 'Drop updated files and add each as a new version of the matching record (from Aprimo Admin Tools).' },
-    { id: 'wisp', label: 'Aprimo Wisp', page: 'app/wisp/settings.html',
+    { id: 'wisp', label: 'Aprimo Wspr settings', page: 'app/wisp/settings.html',
       subtitle: 'An AI guide that answers out loud and points at the right spot on the page: set it up, add knowledge, teach it features.' },
   ];
   const EXTERNAL_NOTE = 'Community-built and maintained tool, not core Aprimo functionality. Use at your own risk.';

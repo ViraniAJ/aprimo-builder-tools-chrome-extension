@@ -1,6 +1,6 @@
-# Aprimo Wisp
+# Aprimo Wspr
 
-Aprimo Wisp is an AI guide built into Aprimo Builder Tools. You ask a question by voice or by typing. Wisp answers out loud with captions, and when the answer is on the Aprimo page you're looking at, it moves a cursor to the right control. For a how-to question it walks you through the task one step at a time, waiting while you do each step.
+Aprimo Wspr (said "whisper") is an AI guide built into Aprimo Builder Tools. You ask a question by voice or by typing. Wspr answers out loud with captions, and when the answer is on the Aprimo page you're looking at, it moves a cursor to the right control. For a how-to question it walks you through the task one step at a time, waiting while you do each step.
 
 It is a browser reimplementation of [Wisp](https://github.com/ZakVir/wisp), a native macOS push-to-talk helper, specialised for Aprimo. None of Wisp's Swift code is reused. Its behaviour is ported in TypeScript instead: the reply grammar, routing, local skills and guide. The parity table below lists what carries over and what doesn't.
 
@@ -8,18 +8,18 @@ It is a browser reimplementation of [Wisp](https://github.com/ZakVir/wisp), a na
 
 - **Open:**
   - Press **Alt+Shift+Space**. It opens the side panel and starts listening; press it again to stop. You can change the keys at `chrome://extensions/shortcuts`.
-  - Or open **Administration › External Builder Tools › Aprimo Wisp** and click **Open Wisp panel**.
-- **Or click the teal cursor** in Aprimo's top bar, next to Help (?). It does the same as the shortcut.
+  - Or open **Administration › External Builder Tools › Aprimo Wspr settings** and click **Open Wspr panel**.
+- **Or click the teal cursor** in Aprimo's top bar, next to Help (?). It does the same as the shortcut. While a walkthrough runs, its card sits in the bottom-right corner.
 - **Ask:**
   - Hold the mic button and talk, or type.
   - Esc stops an answer or a walkthrough.
-- **Walkthroughs:** ask "how do I…". Wisp shows the first step, watches you do it, then shows the next one. Say "what now?" at any point to move on, or ask something else to end the walkthrough.
+- **Walkthroughs:** ask "how do I…". Wspr shows the first step, watches you do it, then shows the next one. Say "what now?" at any point to move on, or ask something else to end the walkthrough.
 - **Teach:** the panel's **Teach** tab records your screen and narration while you do something in Aprimo:
   - Whisper transcribes the narration on your computer.
-  - Wisp notes every click.
-  - Wisp saves the transcript, the clicks and the video as knowledge. When someone later asks about that feature, Wisp answers from the recording and can link to the right moment in the video.
+  - Wspr notes every click.
+  - Wspr saves the transcript, the clicks and the video as knowledge. When someone later asks about that feature, Wspr answers from the recording and can link to the right moment in the video.
 
-  This adds to Wisp's knowledge index. No model is retrained.
+  This adds to Wspr's knowledge index. No model is retrained.
 - **Knowledge:** under **Settings › Knowledge** you can:
   - index Aprimo Help with your own sign-in
   - crawl a site
@@ -34,11 +34,11 @@ It is a browser reimplementation of [Wisp](https://github.com/ZakVir/wisp), a na
 |---|---|---|
 | Side panel | `src/panel/` | Chat UI, push-to-talk (Chrome speech recognition), the controller that runs local skills, AI turns and the guide |
 | Page agent | `src/agent/`, built to `content/wisp-agent.js` | Lists the page's visible controls with ids (`e17 button "Save" at 812, 64`), draws the cursor and hand-drawn marks in a closed shadow root, watches walkthrough steps, notes clicks while recording |
-| Turn | `src/core/turn.ts` | Snapshot, screenshot (`captureVisibleTab`, long edge 1456 px) and top 6 knowledge passages, then the prompt. Streams the reply, parses it line by line, speaks each sentence and draws each visual after Wisp's visual-decision checks |
+| Turn | `src/core/turn.ts` | Snapshot, screenshot (`captureVisibleTab`, long edge 1456 px) and top 6 knowledge passages, then the prompt. Streams the reply, parses it line by line, speaks each sentence and draws each visual after Wspr's visual-decision checks |
 | Providers | `src/providers/` | NVIDIA NIM and OpenAI-compatible (chat-completions SSE), Anthropic (Messages SSE, direct browser access), and the offline WebLLM model in a worker. NVIDIA races Super VL against Nano |
 | Knowledge | `src/kb/` | all-MiniLM-L6-v2 (q8) embeddings in a worker, int8 vectors plus BM25 fused by reciprocal rank. The bundled index is in `extension/kb/`; your additions are in IndexedDB |
 
-Everything Wisp runs locally ships with the extension: the embedding model and ONNX Runtime. Two pieces are downloaded on first use: the Whisper model (for transcribing recordings), and the offline LLM (if you choose it).
+Everything Wspr runs locally ships with the extension: the embedding model and ONNX Runtime. Two pieces are downloaded on first use: the Whisper model (for transcribing recordings), and the offline LLM (if you choose it).
 
 ## Defaults (from Wisp)
 
@@ -87,7 +87,7 @@ Coordinates may be pixels, 0 to 1000, or 0 to 1, per model. The control list is 
 
 ## Parity with the Mac app
 
-| Wisp (macOS) | Aprimo Wisp | Notes |
+| Wisp (macOS) | Aprimo Wspr | Notes |
 |---|---|---|
 | Hold a chord to talk | Hold the mic button; Alt+Shift+Space toggles | Chrome commands fire on key press only, so the shortcut toggles instead of being held |
 | Double-tap to type | Text box in the panel | |
@@ -132,5 +132,5 @@ The built bundles, `vendor/` and `models/` are not committed. `npm run release` 
 ## Not yet verified
 
 - The extension has not yet been loaded and run in Chrome against a real tenant. The unit tests and typecheck pass, and retrieval passes its check.
-- `captureVisibleTab` from the side panel may need the `activeTab` grant that comes with the shortcut. Without a screenshot, Wisp answers from the control list.
+- `captureVisibleTab` from the side panel may need the `activeTab` grant that comes with the shortcut. Without a screenshot, Wspr answers from the control list.
 - Aprimo Help indexing needs a signed-in session in the same browser. Its page structure was not inspected, because it requires login.
