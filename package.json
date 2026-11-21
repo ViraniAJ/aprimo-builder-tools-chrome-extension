@@ -14,6 +14,7 @@
     "fake-aprimo": "node dev/fake-aprimo.js",
     "build:tools": "node scripts/build-tools.mjs",
     "release": "sh scripts/release.sh",
+    "zip": "sh scripts/dev-zip.sh",
     "wisp:assets": "env -u SSL_CERT_FILE node scripts/wisp-assets.mjs",
     "kb:build": "env -u SSL_CERT_FILE node scripts/kb/build.mjs",
     "kb:verify": "node scripts/kb/verify.mjs",

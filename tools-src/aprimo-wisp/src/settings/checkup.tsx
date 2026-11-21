@@ -49,7 +49,7 @@ export function Checkup({ s, goTo }: { s: WispSettings; goTo: (tab: string) => v
   useEffect(() => { run(); }, []);
 
   const problems = rows.filter((r) => r.level === "problem").length;
-  const report = () => [`Aprimo Wspr ${chrome.runtime.getManifest().version}`, `Provider: ${s.provider}, model: ${s.providers[s.provider].model}${s.smartRouting ? " (smart routing)" : ""}`, ...rows.map((r) => `${r.level === "ok" ? "OK" : r.level === "problem" ? "PROBLEM" : "Optional"}: ${r.title}: ${r.text}`)].join("\n");
+  const report = () => [`Aprimo Wspr ${chrome.runtime.getManifest().version_name ?? chrome.runtime.getManifest().version}`, `Provider: ${s.provider}, model: ${s.providers[s.provider].model}${s.smartRouting ? " (smart routing)" : ""}`, ...rows.map((r) => `${r.level === "ok" ? "OK" : r.level === "problem" ? "PROBLEM" : "Optional"}: ${r.title}: ${r.text}`)].join("\n");
 
   return (
     <Section title="Check-up" right={<div className="flex gap-2"><Button small onClick={() => navigator.clipboard.writeText(report())}>Copy report</Button><Button small disabled={running} onClick={run}>Check again</Button></div>}>

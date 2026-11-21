@@ -190,7 +190,7 @@ function About() {
   const m = chrome.runtime.getManifest();
   return (
     <Section title="About">
-      <p className="text-sm">Aprimo Wspr {m.version}: a browser take on Wisp, the push-to-talk Mac helper, specialised for Aprimo and built into Aprimo Builder Tools.</p>
+      <p className="text-sm">Aprimo Wspr {m.version_name ?? m.version}: a browser take on Wisp, the push-to-talk Mac helper, specialised for Aprimo and built into Aprimo Builder Tools.</p>
       <p className="mt-2 text-sm text-muted">What carries over from the Mac app: the reply format and pointing, the race between NVIDIA models, step-by-step guidance, the local skills (math, conversions, time, timers, notes, reading aloud, writing help, drawing), history, captions, themes and the settings file. What doesn't: things only macOS allows (opening Mac apps, menu-bar commands, Mac facts, the system dictionary, the Kokoro voice). See docs/wisp.md.</p>
       <p className="mt-2 text-sm text-muted">Knowledge: developers.aprimo.com (bundled), Aprimo Help (indexed with your sign-in), and anything you add.</p>
       <div className="mt-3"><Button onClick={() => { const d = defaultSettings(); navigator.clipboard.writeText(JSON.stringify({ version: m.version, defaults: { provider: d.provider } })); }}>Copy version info</Button></div>
